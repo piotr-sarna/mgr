@@ -3,5 +3,9 @@
 *.pdf
 *.synctex.gz
 *.toc
+*.bib
+*.bbl
+*.blg
+*.xml
 
 .DS_Store
