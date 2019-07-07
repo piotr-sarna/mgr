@@ -1,16 +1,18 @@
 % !TEX root = main.tex
 \section{Wstęp}
 
-Celem niniejszej pracy jest opisanie narzędzia \mbox{GenericMonitoringTool} stworzonego w ramach frameworka Athena i opisanie jak umożliwiło one wielowątkową pracę z histogramami generowanymi przy pomocy frameworka ROOT. Histogramy są nieodłączną częścią przetwarzania i analizowania danych w instytucji takiej jak CERN, która rocznie przetwarza ok. 25 petabajtów surowych danych pochodzących z Wielkiego Zderzacza Hadronów. Histogramy pozwalają zwizualizować te dane, które w innej formie są nieczytelne dla człowieka. Umożliwiają ich analizę w poszukiwaniu schematów, prawidłowości i potwierdzenia teorii naukowych. Są także wyznacznikiem tego, czy eksperyment się udał i wyniki były zgodne z oczekiwaniami, oraz czy nie był on obarczony błędem.
+Celem niniejszej pracy jest opisanie narzędzia \mbox{GenericMonitoringTool} stworzonego w ramach środowiska Athena\cite{Athena} i opisanie jak umożliwiło ono monitorowanie jakości danych w wielowątkowych algorytmach. Monitorowanie danych odbywa się poprzez generację histogramów i porównanie ich z referencjami. Opisane w pracy narzędzie dotyczy pierwszego kroku w tym procesie.
+Histogramy używane są z tego powodu że pozwalają na kompaktowe podsumowanie istotnych cech dużego zbioru danych. 
+W zastosowaniu do monitorowania jakości danych pozwalają na szybkie uchwycenie anomalii co w konsekwencji prowadzi do wdrożenia poprawek i polepszenia jakości danych czy wręcz do zlokalizowania krytycznych błędów w konfiguracji eksperymentu. 
 
 \subsection{Eksperyment ATLAS}
-ATLAS jest jednym z czterech głównych eksperymentów w ramach Wielkiego Zderzacza Hadronów(LHC) w ośrodku naukowym CERN. Jest to eksperyment fizyczny ogólnego przeznaczenia prowadzony przez międzynarodową grupę naukowców. Został zaprojektowany w celu pełnego wykorzystania potencjału odkrywczego i ogromnego zakresu możliwości fizycznych, jakie zapewnia LHC.
+ATLAS~\cite{} jest jednym z czterech głównych eksperymentów w ramach Wielkiego Zderzacza Hadronów(LHC)~\cite{} w ośrodku naukowym CERN. Jest to eksperyment fizyki cząstek elementarnych ogólnego przeznaczenia prowadzony przez międzynarodową grupę naukowców. Został zaprojektowany w celu pełnego wykorzystania potencjału odkrywczego i ogromnego zakresu możliwości fizycznych, jakie zapewnia LHC.
 
-\subsection{Framework Athena}
-Framework Athena jest platformą programistyczną, która umożliwia pracę z danymi pochodzącymi z eksperymentu ATLAS. Obejmuje to m.in. obsługę zdarzeń na żywo, generowanie zdarzeń, symulacje oraz rekonstrukcje. Jego głównymi komponentami są algorytmy - analizują i przekształcają dane pochodzące z eksperymentu - oraz narzędzia dla algorytmów - ułatwiają pracę z algorytmami i upraszczają ich kod. Komponenty te pisane są w języku C++ i uruchamiane z użyciem skryptów napisanych w Pythonie. 
+\subsection{Athena}
+Athena jest platformą programistyczną, która umożliwia pracę z danymi pochodzącymi z eksperymentu ATLAS. Obejmuje to m.in. filtracji danych, generowanie przypadków zdarzeń metodami Monte-Carlo, symulacje odpowiedzi detektora oraz rekonstrukcję danych. Jego głównymi komponentami są algorytmy, które analizują i przekształcają dane pochodzące z eksperymentu. Pozostałe komponenty środowiska to narzędzia (tools), za pomocą których implementowany jest wzorzec strategia.  Komponenty te pisane są w języku C++ a konfigurowane z użyciem skryptów napisanych w języku Python. 
 
 \subsection{ROOT}
-ROOT jest narzędziem stworzonym przez pracowników CERN, które umożliwia pracę z wielkimi zbiorami danych, w celu ich statycznej analizy, wizualizacji i przechowywania. Został on stworzony w języku C++ przez co dobrze komponuje się z frameworkiem Athena i jest w nim używany na potrzeby prezentowania wyników działania algorytmów. 
+ROOT~\cite{} jest środowiskiem stworzonym w CERN i Fermilab, które umożliwia pracę z wielkimi zbiorami danych, w celu ich statycznej analizy, wizualizacji i przechowywania. Został on stworzony w języku C++ przez co dobrze komponuje się z frameworkiem Athena i jest w nim używany na potrzeby prezentowania wyników działania algorytmów. 
 
 \comment{
 \begin{itemize}
