@@ -1,6 +1,25 @@
 % !TEX root = main.tex
 \section{Refaktoryzacja}
+\comment{https://pl.wikipedia.org/wiki/Refaktoryzacja}
+\comment{Czysty Kod - Robert C. Martin}
+Refaktoryzacja (ang. refactoring) jest to proces zwiększania jakości istniejącego kodu źródłowego, bez modyfikacji jego funkcjonalności. Jest to niezbędna część zarządzania projektem informatycznym, która pozwala utrzymać czytelny i dobrze zorganizowany kod, dostosowany do szeroko znanych wzorców projektowych. Dzięki stosowaniu takich praktyk, okres wdrażania nowych osób do projektu jest krótszy, zmniejsza się narzut na utrzymanie kodu oraz dodawanie nowych funkcjonalności - szczególnie zmian afektujących wiele komponentów jednocześnie. 
 
+Działania, które wykonuje się w ramach refaktoryzacji to:
+\begin{itemize}
+\item zmiana nazw zmiennych, funkcji i klas na bardziej opisowe
+\item ograniczenie liczby parametrów przekazywanych do funkcji
+\item ograniczenie długości definicji funkcji
+\item dostosowanie elementów systemu do przyjętych w projekcie standardów i wzorców
+\item wydzielenie podobnych funkcjonalności w celu usunięcia zduplikowanego kodu
+\item określenie odpowiedzialności poszczególnych komponentów celem identyfikacji zbyt skomplikowanych struktur
+\item przygotowanie kodu do testowania (np. umożliwienie wstrzykiwania zależności) i napisanie testów
+\end{itemize}
+
+Refaktoryzacja jako proces jest kosztowna, gdyż nie zostaje wytworzona żadna nowa funkcjonalność, oraz z perspektywy użytkownika zachowanie programu nie ulega zmianie. Lecz jest ona wartością samą w sobie, która rekompensuje koszt wprowadzania późniejszych zmian w projekcie - szczególnie w dużych i długożyjących projektach.
+
+
+
+\comment{
 \begin{itemize}
 \item opisać proces, jak przebiegała
 \item zebranie wymagań dot. refaktorowanego kodu
@@ -8,3 +27,4 @@
 \item utworzenie interfejsu przyjaznego użytkownikowi
 \item architektura nowego rozwiązania
 \end{itemize}
+}
