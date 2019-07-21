@@ -8,6 +8,11 @@
 \usepackage{geometry}
 \usepackage[style=numeric,backend=bibtex]{biblatex}
 \usepackage{indentfirst}
+
+\usepackage[labelfont=bf]{caption}
+\newcommand{\figref}[1]{\figurename~\ref{#1}}
+\newcommand{\tabref}[1]{\tablename~\ref{#1}}
+
 \newcommand{\comment}[1]{}
 
 \addbibresource{bibliography.bib}
