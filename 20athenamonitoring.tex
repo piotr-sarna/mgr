@@ -20,6 +20,23 @@ Następnie algorytmy monitorujące komunikują się z serwisem THistSvc w celu z
 \label{fig:athena:oldFlow}
 \end{figure}
 
+Taka implementacja modułu do monitorowania i algorytmów niesie za sobą następujące niepożądane konsekwencje:
+
+\begin{itemize}
+\item twórca algorytmu ma bezpośredni i nieograniczony dostęp do wskaźników na histogramy ROOT. 
+W związku z tym, niemożliwe jest zarządzanie takim kodem z centralnego miejsca.
+Jego użytkownik, w każdej chwili, może wpłynąć na jego zachowanie i zmienić parametry wykonania.
+Co więcej, adaptacja do nowych wersji ROOTa jest całkowicie zależna od autora algorytmu. Powoduje to, że framework musi zawsze zachowywać kompatybilność wsteczną, żeby kod Athena nie przestał działać.
+\comment{Z tego powodu klasy ROOT rozrastają się do kilku tysięcy linii. }
+\item deklaracja parametrów histogramów dzieje się w kodzie C++ napisanym przez użytkownika. 
+W związku z tym drobne zmiany i poprawki binowania histogramów, wymagają nowego wersji frameworka Athena. 
+Jest to szczególnie uciążliwe, gdy warunki uruchomienia dynamicznie się zmieniają, a nieprawidłowe binowanie prowadzi np. do umieszczenia w większości wyników poza zakresem.
+\item najczęściej używanymi klasami z frameworka ROOT są TH1, TGraph, TTree. 
+Ich interfejs jest do siebie bardzo zbliżony. 
+Jednakże każdy z tych typów wymaga specjalnego kodu do ich poprawnej obsługi. 
+Więc jeśli programista nie będzie postępował dokładnie z wytycznymi z dokumentacji, może to prowadzić do trudnych do wykrycia błędów. 
+\end{itemize}
+
 \comment{
 \begin{itemize}
 \item co istniało do tej pory?
