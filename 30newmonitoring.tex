@@ -1,5 +1,26 @@
 % !TEX root = main.tex
-\section{Nowy monitoring}
+\section{Nowa implementacja modułu AthenaMonitoring}
+Głównym celem refaktoringu framworka, było oddzielenie kodu odpowiedzialnego za zarządzanie histogramami od kodu algorytmów. 
+Dzięki takiemu rozgraniczeniu odpowiedzialności, twórcy algorytmów mogą skupić się na ich poprawnej implementacji i określeniu które wartości powinny znaleźć się na wykresach jako wynik. 
+Natomiast to kiedy stworzyć histogram, jak go wypełnić i zapisać jest obsługiwane przez wspólny kod. 
+
+Sercem nowego rozwiązania jest GenericMonitoringTool - nowe narzędzie w ramach frameworka Athena.
+Zajmuje się on przygotowaniem histogramów i powiązaniem ich z kodem uruchamianych algorytmów. 
+Działa on w oparciu o deklaracje.
+Twórca algorytmu deklaruje zbiór wartości (obejmuje to skalary oraz tablice) jakie mogą być monitorowane w obrębie jego wykonania, oraz informuje GenericMonitoringTool kiedy są one gotowe do przekazania do histogramów.
+Natomiast użytkownik takiego algorytmu, deklaruje jakie wykresy chciałby stworzyć i z użyciem których zmiennych. 
+Następuje to w kroku konfiguracyjnym Athena Python, gdzie definiuje on typy histogramów, parametry binowania, zakresy wartości, opisy itd. 
+Taki interfejs pozwala uniknąć rekompilacji kodu C++ za każdym razem, gdy użytkownik zmienia parametry wykresu. 
+
+\comment{
+GenericMonitoringTool umożliwił centralne zarządzanie kodem odpowiedzialnym za komunikację z frameworkiem ROOT oraz pozwolił na łatwiejsze  
+
+Pozwala to ograniczyć kopiowanie kodu w obrębie algorytmów 
+Daje to duża dowolność 
+}
+
+
+\comment{
 \begin{itemize}
 \item jak używać -> interface
 \item jakie można uzyskać efekty
@@ -9,3 +30,4 @@
 \item jak skonfigurować
 \item opis kodu
 \end{itemize}
+}
