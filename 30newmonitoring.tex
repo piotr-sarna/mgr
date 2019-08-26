@@ -30,192 +30,146 @@ Taki interfejs pozwala uniknąć rekompilacji kodu C++ za każdym razem, gdy uż
 \label{fig:athena:oldFlow}
 \end{figure}
 
-\subsection{Implementacja}
+\subsection{Deklaracja histogramu}
+"PATH, HTYPE, NAME, TITLE, BINNING, [LABELS], OPTIONS"
 
+\subsection{Publiczny interfejs}
+
+\subsubsection{GenericMonitoringTool}
+Centralnym punktem nowej implementacji jest klasa GenericMonitoringTool, będąca narzędziem frameworka Athena.
+Służy ona jako pomost pomiędzy konfiguracją napisaną w Pythonie, a kodem algorytmów w C++.
+Jest zarządzana przez użytkownika i to do niej wstrzykuje się deklaracje histogramów jakie mają zostać utworzone podczas uruchomienia.
+To ona odpowiada za przygotowanie i przechowywanie obiektów ROOT, wygenerowanych na podstawie tych deklaracji.
+Dostęp do nich zapewnia poprzez warstwę abstrakcji zdefiniowaną w klasie HistogramFiller. 
+Dodatkowo, posiada ona dostęp do aktualnych wartości Run Number i Lumi Block; dzięki temu możliwe jest generowanie grup histogramów w kontekście tych zmiennych. 
+ 
+\subsubsection{HistogramDef}
+Deklaracje histogramów na potrzeby GenericMonitoringTool reprezentowane są przez klasę HistogramDef.
+To w niej zachodzi parsowanie ciągu znaków podanego przez użytkownika i wstępna weryfikacja jego poprawności.
+Dzięki niej łatwiejszy jest dostęp do wybranych danych o histogramie. 
+Jeśli parsowanie z jakiegoś powodu się nie powiedzie, użytkownik zostanie o tym poinformowany poprzez wyjątek, wraz z opisem problemu.
+
+\subsubsection{IHistogramProvider}
+Interfejs IHistogramProvider został przygotowany z myślą o zapewnieniu warstwy abstrakcji pomiędzy frameworkiem ROOT, a kodem do monitorowania zmiennych. 
+Zawiera on jedną metodę - `histogram()`; to ona wykorzystywana jest, aby pobrać odpowiedni obiekt histogramu do wypełnienia.
+
+\subsubsection{IMonitoredVariable}
+Interfejs IMonitoredVariable stanowi bazę dla wszystkich zmiennych monitorowanych. 
+Zawiera on nazwę zmiennej oraz metodę `getVectorRepresentation()`, która musi zostać zaimplementowana przez klasy pochodne.
+Framework dostarcza gotowe implementacje tego interfejsu, jednak w specyficznych przypadkach użytkownik może sam go zaimplementować.  
+
+\subsubsection{MonitoredScalar}
+MonitoredScalar jest implementacją interfejsu IMonitoredVariable, reprezentującą pojedynczą wartość. 
+Może ona być dowolnego typu, dopóki możliwe jest zrzutowanie go do `double`.
+Definicja tej klasy pozwala wielokrotnie pobierać i modyfikować jej aktualną wartość.
+Użytkownik może zdefiniować transformację tej zmiennej, która zostanie zaaplikowana w momencie pobrania jej wartości na potrzeby wypełnienia histogramu.
+
+\subsubsection{MonitoredCollection}
+MonitoredCollection jest implementacją interfejsu IMonitoredVariable, reprezentującą kolekcję wartości. 
+Może ona być dowolnego typu, dopóki możliwe jest zrzutowanie wartości tej kolekcji do `double`.
+Po utworzeniu obiektu tego typu, nie można go bezpośrednio modyfikować.
+Jednak wszystkie zmiany przeprowadzone na kolekcji, zostaną odzwierciedlone w końcowym wyniku.
+Użytkownik może zdefiniować transformację dla obiektów znajdujących się w kolekcji, która zostanie zaaplikowana w momencie pobrania ich wartości na potrzeby wypełnienia histogramu.
+
+\subsubsection{MonitoredTimer}
+MonitoredTimer jest implementacją interfejsu IMonitoredVariable, która pozwala mierzyć czas w mikrosekundach.
+Dostarcza metody `start()` i `stop()`, zapewniające kontrole nad jej zachowaniem.
+Wymagane jest, aby nazwy zmiennych tego typu posiadały prefix `TIME\_`.
+
+\subsubsection{MonitoredGroup}
+Miejscem w którym zmienne monitorowane kojarzone są z odpowiednimi histogramami jest klasa MonitoredGroup. 
+Przyjmuje ona referencje do GenericMonitoringTool i zbioru IMonitoredVariable.
+Na tej podstawie pobiera listę obiektów HistogramFiller, które są zapamiętywane w jej kontekście.
+Dzięki temu możliwe jest określenie, kiedy i które histogramy należy wypełnić oraz jakie zmienne mają być użyte w tym celu.
+Domyślnie wypełnienie następuje, gdy wywoływany jest destruktor obiektu MonitoredGroup. 
+Jednakże, można to zrobić manualnie używając metody `fill()`.
+Stworzenie obiektu MonitoredGroup jest niezbędne do używania zmiennych monitorowanych, ponieważ bez grupy, niemożliwe jest skojarzenie zmiennych z histogramami. 
+
+\subsubsection{HistogramFiller}
+Klasa abstrakcyjna HistogramFiller agreguje wszystkie dane niezbędne do poprawnego wypełnienia histogramów danymi. 
+To ona przechowuje referencje do instancji IHistogramProvider, HistogramDef, zbioru IMonitoredVariable i mutexów.
+Zapewnia interfejs do wypełniania histogramów w postaci metody `fill()`.
+Klasy pochodne, powinny ją zaimplementować i wpisać dane ze zmiennych monitorowanych do histogramów ROOT.
+W tej metodzie używany jest również mutex do zapewnienia spójności danych i synchronizacji pomiędzy różnymi wątkami. 
+
+\subsubsection{HistogramDefParseException}
+HistogramDefParseException reprezentuje błędy powstałe przy próbie sparsowania deklaracji histogramu dostarczonej przez użytkownika.
+Zawiera on informacje o przyczynie problemu.
+
+\subsubsection{HistogramException}
+HistogramException reprezentuje błędy powstałe przy próbie utworzenia obiektów ROOT na podstawie HistogramDef.
+Zawiera on informacje o przyczynie problemu.
+
+\subsection{Niepubliczny interfejs}
+
+\subsubsection{HistogramFactory}
+Klasa HistogramFactory stanowi bezpośrednią warstwę komunikacji z serwisem THistSvc w którym tworzone są obiekty ROOT.
+Odpowiada ona za interpretację HistogramDef, stworzenie histogramu odpowiedniego typu i skonfigurowanie go na podstawie tej deklaracji.
+Dodatkowo zapewnia mechanizm ponownego użycia raz już stworzonych histogramów, co zwiększa wydajność tego rozwiązania.
+
+\subsubsection{HistogramFillerFactory}
+Głównym zadaniem klasy HistogramFillerFactory jest utworzenie odpowiedniego zestawu obiektów IHistogramProvider i HistogramFiller na podstawie dostarczonej definicji histogramu w kontekście GenericMonitoringTool.
+
+\subsubsection{Implementacje IHistogramProvider}
 \begin{itemize}
-\item GenericMonitoringTool
-	\begin{itemize}
-	\item public
-	\item centralna klasa
-	\item pomost pomiedzy konfiguracja python a kodem C++
-	\item pozwala pobrac lumi block i run number
-	\item pozwala pobrac histogram fillery pasujace do danej grupy zmiennych monitorowanych
-	\item tworzy i trzyma histogram fillery dla kazdego zadeklarowanego histogramu
-	\end{itemize}
-	
-\item HistogramDef
-	\begin{itemize}
-	\item public
-	\item jest reprezentacja/definicją histogramu
-	\item potrafi utworzyc siebie ze stringa podanego przez uzytkownika
-	\item waliduje czy podane przez uzytkownika paramtery sa poprawne
-	\item jesli nie to nie uda sie utworzyc 
-	\end{itemize}
-	
-\item HistogramFactory
-	\begin{itemize}
-	\item stanowi polaczenie z frameworkiem ROOT
-	\item to ona tworzy i konfiguruje histogramy w ramach THistSvc
-	\item robi to na bazie HistogramDef
-	\item obsluguje cacheowanie juz raz utworzonych histogramow - niezalecane
-	\end{itemize}
-	
-\item HistogramException
-	\begin{itemize}
-	\item wyjatek rzucany gdy cos sie nie powiedzie przy tworzeniu/pobieraniu histogramu na podstawie histogramDef 
-	\end{itemize}
-	
-\item IHistogramProvider
-	\begin{itemize}
-	\item public
-	\item interfejs ktory pozwala pobierac histogramy ROOT 
-	\end{itemize}
 \item StaticHistogramProvider
-	\begin{itemize}
-	\item Implementacja IHistogramProvidera
-	\item pobiera histogramy ROOT bezposrednio z HistogramFactory przy tworzeniu
-	\item cacheuje je, nigdy sie nie zmienia
-	\end{itemize}
+
+	Charakteryzuje się tym, że obiekt histogramu jest tworzony i zapamiętywany w konstruktorze tego obiektu. Zapewnia to szybszy dostęp do histogramu przy jego wypełnianiu. 
 \item LumiblockHistogramProvider
-	\begin{itemize}
-	\item Implementacja IHistogramProvidera
-	\item pobiera histogramy ROOT z HistogramFactory na podstawie aktualnego lumi bloku
-	\item za kazdym razem odwoluje sie na nowo do HF
-	\item wazny jest parametr kLBNHistoryDepth podawany w definicji histogramu
-	\item definiuje on na jak liczne grupy podzielone beda wyniki
-	\item musi byc liczba dodatnia
-	\end{itemize}
+
+	Cechą charakterystyczną tej implementacji jest to, że zwraca ona różne obiekty histogramów na podstawie aktualnej wartości Lumi Block. 
+	Na to jaka instancja zostanie zwrócona, wpływa parametr kLBNHistoryDepth.
+	Określa on, jak liczne są grupy w które łączone są wyniki.
+	Te dwie informacje pozwalają zdecydować do której grupy ma trafić aktualna wartość.
+	Konsekwencją takiej funkcjonalności jest konieczność każdorazowego odwoływania się do THistSvc po odpowiedni obiekt ROOT, co nieco spowalnia wypełnianie tego typu histogramów.
 \item OfflineHistogramProvider
-	\begin{itemize}
-	\item przeznaczony dla uruchomien Offline
-	\item pobiera histogramy ROOT z HistogramFactory na podstawie aktualnego lumi bloku, run number i konwencji histogramu 
-	\end{itemize}
-	
-\item HistogramFillerFactory
-	\begin{itemize}
-	\item na podstawie HistogramDef decyduje jaka instancja HistogramProvidera ma zostac utworzona
-	\item na podstawie HistogramDef decyduje jaka instancja HistogramFillera ma zostac utworzona
-	\end{itemize}
-\item HistogramFiller
-	\begin{itemize}
-	\item public
-	\item oddziela swiat frameworka ROOT od frameworka athena
-	\item klasa abstrakcyjna
-	\item zapewnia interfejs do wypelniania histogramow ROOT
-	\item pozwala wstrzyknac zmienne monitorowane ktore maja zostac uzyte przy wypelnianiu
-	\item przechowuje mutexy ktore sa uzywane w klasach pochodnych do synchronizacji watkow
-	\item pozwala wypelniac histogramy z wagami
-	\end{itemize}
-\item HistogramFiller1D
-	\begin{itemize}
-	\item specjalizowany filler dla zywklych histogramow 1D (TH1)
-	\item fill uzywa mutexa do zapewnienia synchronizacji watkow
-	\end{itemize}
-\item CumulativeHistogramFiller1D
-	\begin{itemize}
-	\item dziedziczy po HistogramFiller1D
-	\item specjalny tryb wypelniania, wypelnia wszystkie biny na lewo od wartosci zmiennej
-	\end{itemize}
-\item HistogramFillerRebinable1D
-	\begin{itemize}
-	\item dziedziczy po HistogramFiller1D
-	\item dynamicznie rozszerza zakres wartosci histogramu 2x, jesli nowa wartosc jest spoza zakresu 
-	\end{itemize}
-\item VecHistogramFiller1D
-	\begin{itemize}
-	\item dziedziczy po HistogramFiller1D
-	\item adds the content of the monitored variable to the histogram bins
-	\end{itemize}
-\item VecHistogramFiller1DWithOverflows
-	\begin{itemize}
-	\item dziedziczy po HistogramFiller1D
-	\item same as kVec but treat 0th(last) element as underflow(overflow)
-	\end{itemize}
-\item HistogramFiller2D
-	\begin{itemize}
-	\item specjalizowany filler dla zywklych histogramow 2D (TH2)
-	\item fill uzywa mutexa do zapewnienia synchronizacji watkow
-	\item wykorzysuje 2 zmienne monitorowne na raz, musza miec wielkosc 1-N, N-1, N-N
-	\item dzialaja wagi
-	\end{itemize}
-\item HistogramFillerProfile
-	\begin{itemize}
-	\item  specjalizowany filler dla histogramow TProfile
-	\item fill uzywa mutexa do zapewnienia synchronizacji watkow
-	\item wykorzysuje 2 zmienne monitorowne na raz, musza miec wielkosc 1-N, N-1, N-N
-	\item dzialaja wagi
-	\end{itemize}
-\item HistogramFiller2DProfile
-	\begin{itemize}
-	\item  specjalizowany filler dla histogramow TProfile2D
-	\item fill uzywa mutexa do zapewnienia synchronizacji watkow
-	\item wykorzysuje 3 zmienne monitorowne na raz, musza miec wielkosc rowna N
-	\item dzialaja wagi
-	\end{itemize}
-\item HistogramFillerEfficiency
-	\begin{itemize}
-	\item specjalizowany filler dla histogramow TEfficiency
-	\item fill uzywa mutexa do zapewnienia synchronizacji watkow
-	\item wykorzysuje 2 zmienne monitorowne na raz, musza miec wielkosc rowna N
-	\item dzialaja wagi
-	\end{itemize}
-	
-\item IMonitoredVariable
-	\begin{itemize}
-	\item public
-	\item interfejs dla zmiennych monitorowanych
-	\item w razie potrzeby uzytkownik moze go zaimplementowac
-	\item trzeba zaimplementowac jedna metode - getVectorRepresentation <double>
-	\item sa dostepne gotowe implementacje
-	\end{itemize}
-\item MonitoredScalar
-	\begin{itemize}
-	\item public
-	\item reprezentuje zmienna liczbowa lub obiekt ktory moze byc zrzutowany do double
-	\item mozna pisac i czytac wartosc
-	\item mozna zdefiniowac transformacje, ktora zostanie zaaplikowana przy pobieraniu wartosci przez filler
-	\end{itemize}
-\item MonitoredCollection
-	\begin{itemize}
-	\item public
-	\item reprezentuje kolekcje zmiennych - tablice, vector etc. zawierajacych wartosci liczbowe, albo obiekty - wtedy trzeba podac konwerter
-	\item wartosci z kolekcji zostana przekazane do histogramu
-	\end{itemize}
-\item MonitoredTimer
-	\begin{itemize}
-	\item public
-	\item nazwa zmiennej musi sie zaczynac od TIME\_
-	\item mierzy ile czasu uplynelo od startu do stopu
-	\item uzyteczny w specyficznych przypadkach
-	\end{itemize}
-\item MonitoredGroup
-	\begin{itemize}
-	\item public
-	\item spina zmienne monitorowane z fillerami
-	\item to on tak na prawde triggeruje wypelnienie histogramow
-	\item zazwyczaj w swoim destruktorze
-	\item mozna wymusic wypelnienie
-	\item pobiera fillery z GMT
-	\item bez grupy zmienne monitorowane nie dzialaja/ nie maja efektu
-	\end{itemize}
+
+	Cechuje się tym, że to jaki obiekt histogramu zostanie zwrócony, wpływają aktualne wartości: Lumi Block, Run Number oraz konwencja histogramu.
+	Jest przeznaczony dla uruchomień typu Offline.
+	Podobnie jak dla LumiblockHistogramProvider, konieczne jest każdorazowe odwołanie się do THistSvc, w celu pobrania odpowiedniej instancji ROOT.
 \end{itemize}
 
-\comment{
-GenericMonitoringTool umożliwił centralne zarządzanie kodem odpowiedzialnym za komunikację z frameworkiem ROOT oraz pozwolił na łatwiejsze  
-
-Pozwala to ograniczyć kopiowanie kodu w obrębie algorytmów 
-Daje to duża dowolność 
-}
-
-
-\comment{
+\subsubsection{Implementacje HistogramFiller}
+Wszystkie poniższe implementacje, używają mutexa dostarczonego przez klasę bazową do synchronizacji wątków. 
 \begin{itemize}
-\item jak używać -> interface
-\item jakie można uzyskać efekty
-\item TESTY WYDAJNOŚCI + wielowątkowe
-\item czemu warto używać
-\item co potrafi zrobić
-\item jak skonfigurować
-\item opis kodu
+\item HistogramFiller1D
+
+	Jest to domyślna klasa odpowiadająca za wypełnianie wszystkich typów histogramów jednowymiarowych TH1. 
+\item CumulativeHistogramFiller1D
+
+	Ta implementacja jest używana, gdy użytkownik zadeklaruje histogram z opcją `kCumulative`.
+	Cechuje się tym, że dodawana jest wartość 1 do wszystkich binów histogramu o indeksach mniejszych lub równych indeksowi binu do którego należałoby dodać aktualnie przetwarzaną wartość.
+\item HistogramFillerRebinable1D
+
+	Ta implementacja jest używana, gdy użytkownik zadeklaruje histogram z opcją `kAddBinsDynamically`.
+	Jej cechą szczególną jest automatyczne zwiększanie zakresu danych histogramu, gdy nowa wartość jest spoza tego zakresu. Za każdym razem jest on zwiększany dwukrotnie do momentu, aż nowa wartość zawierać się będzie w nowym zakresie.
+\item VecHistogramFiller1D
+
+	Ta implementacja jest używana, gdy użytkownik zadeklaruje histogram z opcją `kVec`.
+	Jest ona przeznaczona głownie do zmiennych typu MonitoredCollection.
+	Iteruje po wszystkich wartościach z kolekcji i przepisuje ich wartości do binów o indeksach odpowiadających indeksom z tej kolekcji.
+\item VecHistogramFiller1DWithOverflows
+
+	Ta implementacja jest używana, gdy użytkownik zadeklaruje histogram z opcją `kVecUO`.
+	Działa bardzo podobnie do VecHistogramFiller1D, z tą różnicą, że nie zabezpiecza użytkownika przed przepełnieniem histogramu.
+\item HistogramFiller2D
+
+	Jest to domyślna klasa odpowiadająca za wypełnianie wszystkich typów histogramów dwuwymiarowych TH2.
+	Do wypełnienia histogramu wykorzystuje ona dwie zmienne monitorowane jednocześnie.
+	Aby ten proces przebiegł poprawnie, reprezentacje tych zmiennych muszą być równolicznymi kolekcjami lub jedna z nich musi zawierać dokładnie jeden element. 
+\item HistogramFillerProfile
+
+	Ta implementacja jest używana, gdy użytkownik zadeklaruje histogram typu `TProfile`.
+	Wypełnienie przebiega tak samo jak dla HistogramFiller2D.
+\item HistogramFiller2DProfile
+
+	Ta implementacja jest używana, gdy użytkownik zadeklaruje histogram typu `TProfile2D`.
+	Do wypełnienia histogramu wykorzystuje ona trzy zmienne monitorowane jednocześnie.
+	Aby ten proces przebiegł poprawnie, reprezentacje tych zmiennych muszą być równolicznymi kolekcjami.
+\item HistogramFillerEfficiency
+
+	Ta implementacja jest używana, gdy użytkownik zadeklaruje histogram typu `TEfficiency`.
+	Do wypełnienia histogramu wykorzystuje ona dwie zmienne monitorowane jednocześnie.
+	Aby ten proces przebiegł poprawnie, reprezentacje tych zmiennych muszą być równolicznymi kolekcjami.
+	
 \end{itemize}
-}
