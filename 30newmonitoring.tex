@@ -16,7 +16,7 @@ Taki interfejs pozwala uniknąć rekompilacji kodu C++ za każdym razem, gdy uż
 \centering
 \includegraphics[width=0.75\textwidth]{img/algo_init.png}
 \caption{
-//TODO
+Przygotowanie instancji GenericMonitoringTool i monitorowanych algorytmów w konfiguracji Athena Python. Na tym etapie niezbędne jest zadeklarowanie histogramów, które powinny zostać utworzone jako wynik uruchomienia skryptu.
 }
 \label{fig:athena:oldFlow}
 \end{figure}
@@ -25,13 +25,31 @@ Taki interfejs pozwala uniknąć rekompilacji kodu C++ za każdym razem, gdy uż
 \centering
 \includegraphics[width=0.75\textwidth]{img/algo_run.png}
 \caption{
-//TODO
+Przygotowanie zmiennych i grup w monitorowanym algorytmie, oraz przekazanie kontekstu do grupy w postaci instancji GenericMonitoringTool. Pozwala to skojarzyć zadeklarowane histogramy ze zmiennymi występującymi w tej grupie. 
 }
 \label{fig:athena:oldFlow}
 \end{figure}
 
 \subsection{Deklaracja histogramu}
-"PATH, HTYPE, NAME, TITLE, BINNING, [LABELS], OPTIONS"
+Histogramy, które GenericMonitoringTool stworzy w ramach uruchomienia skryptu, muszą zostać wpierw zadeklarowane przez użytkownika w skrypcie Athena Python. Aby to zrobić należy przygotować łańcuch znaków w następującym formacie: 
+
+\begin{center}
+\begin{tabular}{l}
+PATH, HTYPE, WEIGHT, CONV, VNAMES, TITLE, BINNING, [BLABELS], OPT
+\end{tabular}
+\end{center}
+
+\begin{itemize}
+\item PATH - ścieżka pod jaką zostanie utworzony histogram. Dostępne ścieżki najwyższego poziomu: EXPERT, SHIFT, DEBUG, RUNSTAT, EXPRESS
+\item HTYPE - rodzaj histogramu. Musi być jednym z: TH1[F,D,I], TH2[F,D,I], TProfile, TProfile2D, TEfficiency
+\item WEIGHT - nazwa zmiennej zawierającej wagi dla histogramu
+\item CONV - konwencja dla ścieżek pod jaką zostanie utworzony histogram
+\item VNAMES - nazwy zmiennych monitorowanych, które zostaną użyte do wypełnienia histogramu. Mogą być w formacie np. "name1,name2;alias", wtedy name1 i name2 będą nazwami zmiennych; natomiast name1 i alias, będą podpisami osi na histogramie
+\item TITLE - tytuł histogramu
+\item BINNING - zakresy wartości kolejnych osi histogramu. Ilość wartości w tym polu jest zależna od rodzaju histogramu
+\item BLABELS - opcjonalne podpisy dla poszczególnych binów histogramu
+\item OPT - dodatkowe opcje histogramu. Dostępne opcje: kCanRebin, Sumw2, kAddBinsDynamically, kLBNHistoryDepth=value, kCumulative, kVec, kVecUO
+\end{itemize}
 
 \subsection{Publiczny interfejs}
 
