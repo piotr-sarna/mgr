@@ -1,10 +1,33 @@
 % !TEX root = main.tex
-\section{Porównanie nowego i starego monitoringu}
+\section{GenericMonitoringTool jako wynik refaktoryzacji kodu}
+Wynikiem refaktoryzacji modułu AthenaMonitoring i przykładowych algorytmów monitorowanych jest klasa GenericMonitoringTool.
+Agreguje ona funkcjonalności zidentyfikowane jako kluczowe dla monitoringu, czyli możliwość deklaracji histogramów oraz wypełnianie ich zmiennymi monitorowanymi z kodu algorytmów.
+Jednak w przeciwieństwie do pierwotnej implementacji, dostarcza ona kilka poziomów abstrakcji, umożliwiających centralizację połączenia pomiędzy tymi dwiema warstwami.
+Refaktoryzacja wprowadziła wiele nowych rozwiązań, które sprawiły, że kod stał się bardziej elastyczny i łatwiejszy w użyciu.
 
+Największym zyskiem z nowej implementacji jest oddzielenie kodu zarządzającego cyklem życia obiektów ROOT od kodu algorytmów. 
+Pozwoliło to zredukować ich objętość i umożliwiło osobom implementującym algorytmy skupienie się na ich głównym zadaniu, zamiast na obsłudze histogramów.
+Dodatkowo sprawia to, że kod monitoringu stał się scentralizowany, dzięki czemu możliwe stały się aktualizacje ROOT, bez potrzeby modyfikowania już istniejących algorytmów.
 
+Po refaktoryzacji możliwe stało się rozwiązanie problemu scalania histogramów.
+Dzięki temu, że w nowym rozwiązaniu istnieje centralny punkt w którym obsługiwane są histogramy, łatwe stało się dodanie zabezpieczeń dla wywołań wielowątkowych w postaci użycia `mutex`ów.
+Zapewniają one spójność danych wpisywanych do obiektów ROOT, a mają przy tym bardzo mały narzut czasowy.
 
-\subsection{GenericMonitoringTool jako wynik refaktoryzacji kodu}
+Wdrożone warstwy abstrakcji, umożliwiły łatwiejsze dodawanie nowych funkcjonalności, które mogą realizować bardzo złożone scenariusze wypełniania histogramów.
+Dobrym przykładem jest tu klasa LumiblockHistogramProvider, która realizuje funkcjonalność podziału danych na postawie kontekstu w jakim zostały one wygenerowane. 
+Zaimplementowanie jej funkcjonalności w kodzie algorytmu byłoby bardzo trudnym zadaniem. 
+
+Dodatkowym zyskiem z takiego rozdzielenia odpowiedzialności, było umożliwienie tworzenia testów jednostkowych. 
+Znacznie podniosło to jakość kodu pisanego na potrzeby GenericMonitoringTool.
+Umożliwiło to również wcześniejsze wykrywanie problemów w programie, bez potrzeby uruchomiania algorytmów. 
+Znacznie przyśpieszyło to proces tworzenia nowego kodu.
+
 \subsection{Wydajność}
+- czas wykonywania algorytmu jest >> od czasu potrzebnego na zalockowanie mutexa
+- dzieki temu czas potrzebny na wypelnienie histogramu stanowi maly procent czasu przebiegu algorytmu
+- zyskuje bardzo wygoda uzycia
+- jest tak samo szybki jak uzywanie samemu mutexow a nie trzeba sie troszczyc o caly balagan dookola
+- 
 
 //TODO
 \begin{itemize}
