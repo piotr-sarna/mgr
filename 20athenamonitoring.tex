@@ -1,12 +1,13 @@
 % !TEX root = main.tex
 \section{Obecna implementacja modułu AthenaMonitoring}
 Dotychczas środowisko Athena używało jednowątkowego przetwarzania algorytmów. 
-Ich sekwencja wykonania jest z góry określona przez pliki konfiguracyjne napisane w Pythonie. 
+Ich sekwencja wykonania jest z góry określona przez pliki konfiguracyjne napisane w Athena Python. 
 Służą one również do wystartowania całego zadania, np. rekonstrukcji. 
 Algorytmy współdzielą dane poprzez pisanie i odczytywanie ich ze wspólnego magazynu danych (Event Store). 
 Mogą one również używać narzędzi, które są konfigurowane niezależnie. 
 Algorytmy mogą wchodzić w interakcję z serwisami, których cykl życia jest niezależny od cyklu wykonania algorytmów.
-W kontekście monitoringu, najważniejszy jest serwis do histogramowania (THistSvc), który zajmuje się zapisywaniem histogramów ROOT na dysk. 
+W kontekście tej pracy i monitorowania zmiennych, najważniejszy jest serwis do obsługi histogramów - THistSvc.
+Zajmuje się tworzeniem i zarządzaniem cyklem życia obiektów z frameworka ROOT.
 Schemat wykonania rekonstrukcji został pokazany na \figref{fig:athena:oldFlow}.
 
 \begin{figure}[!ht]
@@ -26,10 +27,11 @@ Taka implementacja modułu do monitorowania i algorytmów niesie za sobą nastę
 \item twórca algorytmu ma bezpośredni i nieograniczony dostęp do wskaźników na histogramy ROOT. 
 W związku z tym, niemożliwe jest zarządzanie takim kodem z centralnego miejsca.
 Jego użytkownik, w każdej chwili, może wpłynąć na jego zachowanie i zmienić parametry wykonania.
-Co więcej, adaptacja do nowych wersji ROOTa jest całkowicie zależna od autora algorytmu. Powoduje to, że framework musi zawsze zachowywać kompatybilność wsteczną, żeby kod Athena nie przestał działać.
-\comment{Z tego powodu klasy ROOT rozrastają się do kilku tysięcy linii. }
+Co więcej, adaptacja do nowych wersji ROOTa jest całkowicie zależna od autora algorytmu. 
+Powoduje to, że framework musi zawsze zachowywać kompatybilność wsteczną, żeby kod Athena nie przestał działać.
+Z tego powodu klasy ROOT rozrastają się do kilku tysięcy linii.
 \item deklaracja parametrów histogramów dzieje się w kodzie C++ napisanym przez użytkownika. 
-W związku z tym drobne zmiany i poprawki binowania histogramów, wymagają nowego wersji frameworka Athena. 
+W związku z tym drobne zmiany i poprawki binowania histogramów, wymagają nowej wersji frameworka Athena. 
 Jest to szczególnie uciążliwe, gdy warunki uruchomienia dynamicznie się zmieniają, a nieprawidłowe binowanie prowadzi np. do umieszczenia w większości wyników poza zakresem.
 \item najczęściej używanymi klasami z frameworka ROOT są TH1, TGraph, TTree. 
 Ich interfejs jest do siebie bardzo zbliżony. 
@@ -37,22 +39,22 @@ Jednakże każdy z tych typów wymaga specjalnego kodu do ich poprawnej obsługi
 Więc jeśli programista nie będzie postępował dokładnie z wytycznymi z dokumentacji, może to prowadzić do trudnych do wykrycia błędów. 
 \end{itemize}
 
-\subsection{Problem mergeowania}
+\subsection{Problem scalania histogramów}
+Największym problemem aktualnego rozwiązania jest brak możliwości bezpiecznego zapisu z wielu wątków do histogramów ROOT.
+Spowodowane jest to implementacją tego frameworka, które nie przewiduje takiego przypadku użycia. 
 
-\comment{
-\begin{itemize}
-\item co istniało do tej pory?
-\item czemu potrzeba czegoś nowego?
-\item wady starego rozwiązania
-\item czemu monitoring jest ważny?
-\item do czego jest używany?
-\item na co pozwalał dotychczas?
-\item WYDAJNOŚĆ
-\item BEZPIECZEŃSTWO dla wielowątkowości
-\item kto używa kodu, dostosowanie do klienta
-\item co to Athena, gdzie jest uzywana, do czego, co to CERN, ile danych przetwarza
-\item czemu nowe rozwiązanie pomoże unikać pomyłek w danych wejściowych!!!
-\item co to algorytmy i filtrowanie ONLINe i OFFLINE
-\item data quality
-\end{itemize}
-}
+Kod algorytmów w większości przypadków mógłby zostać łatwo zrównoleglony.
+Jednak to, że produkowane przez nie dane muszą zostać umieszczone na histogramie, znacznie utrudnia to zadanie.
+Potrzeby jest zewnętrzny mechanizm synchronizacji tych danych, w celu zachowania ich spójności przy umieszczaniu na histogramie.
+Obecnie nie ma żadnego ogólnie przyjętego sposobu, który by to umożliwiał.
+O ile w ramach jednego algorytmu, byłoby możliwe napisanie niestandardowej synchronizacji, to nie zapewniałaby ona spójności pomiędzy różnymi algorytmami.
+
+Możliwym rozwiązaniem tego problemu mogłyby być histogramy cząstkowe.
+Każda instancja algorytmu produkowałaby histogram tylko dla swojej części danych.
+Umożliwiłoby to wielowątkową pracę algorytmów, jednak takie rozwiązanie przenosi problem w inne miejsce. 
+Konieczne byłoby stworzenie zewnętrznego programu, który scalałby wyniki do ich ostatecznej formy.
+Takie narzędzie byłoby mało elastyczne i czasochłonne w stworzeniu i utrzymaniu; konieczność aktualizacji dla różnych przypadków użycia i dodatkowa warstwa w której mogą wystąpić błędy. 
+Dodatkowo nie pozwalałoby ono na zaawansowane przypadki użycia histogramów ze względu na separację danych.
+
+\subsection{Wydajność}
+//TODO
