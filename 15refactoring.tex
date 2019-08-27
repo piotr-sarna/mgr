@@ -2,7 +2,9 @@
 \section{Refaktoryzacja}
 \comment{https://pl.wikipedia.org/wiki/Refaktoryzacja}
 \comment{Czysty Kod - Robert C. Martin}
-Refaktoryzacja (ang. refactoring) jest to proces zwiększania jakości istniejącego kodu źródłowego, bez modyfikacji jego funkcjonalności. Jest to niezbędna część zarządzania projektem informatycznym, która pozwala utrzymać czytelny i dobrze zorganizowany kod, dostosowany do szeroko znanych wzorców projektowych. Dzięki stosowaniu takich praktyk, okres wdrażania nowych osób do projektu jest krótszy, zmniejsza się narzut na utrzymanie kodu oraz dodawanie nowych funkcjonalności - szczególnie zmian afektujących wiele komponentów jednocześnie. 
+Refaktoryzacja (ang. refactoring) jest to proces zwiększania jakości istniejącego kodu źródłowego, bez modyfikacji jego funkcjonalności. 
+Jest to niezbędna część zarządzania projektem informatycznym, która pozwala utrzymać czytelny i dobrze zorganizowany kod, dostosowany do szeroko znanych wzorców projektowych.
+Dzięki stosowaniu takich praktyk, okres wdrażania nowych osób do projektu jest krótszy, zmniejsza się narzut na utrzymanie kodu oraz dodawanie nowych funkcjonalności - szczególnie zmian afektujących wiele komponentów jednocześnie. 
 
 Działania, które wykonuje się w ramach refaktoryzacji to:
 \begin{itemize}
@@ -15,18 +17,34 @@ Działania, które wykonuje się w ramach refaktoryzacji to:
 \item przygotowanie kodu do testowania (np. umożliwienie wstrzykiwania zależności) i napisanie testów
 \end{itemize}
 
-Refaktoryzacja jako proces jest kosztowna, gdyż nie zostaje wytworzona żadna nowa funkcjonalność, oraz z perspektywy użytkownika zachowanie programu nie ulega zmianie. Lecz jest ona wartością samą w sobie, która rekompensuje koszt wprowadzania późniejszych zmian w projekcie - szczególnie w dużych i długożyjących projektach.
+Refaktoryzacja jako proces jest kosztowna, gdyż nie zostaje wytworzona żadna nowa funkcjonalność, oraz z perspektywy użytkownika zachowanie programu nie ulega zmianie.
+Lecz jest ona wartością samą w sobie, która rekompensuje koszt wprowadzania późniejszych zmian w projekcie - szczególnie w dużych i długożyjących projektach.
 
+W pewnych sytuacjach istniejący kod jest na tyle zły, że nie opłaca się stosować refaktoryzacji i szybciej jest go napisać od nowa. 
 
-\comment{https://mfiles.pl/pl/index.php/Refactoring}
-Jeśli istniejący kod jest zły na tyle, że pomimo możliwości zastosowania procesu refaktoryzacji, najprościej będzie napisać go od nowa. Taka sytuacja powinna mieć miejsce, kiedy program nie działa. Błędy mogą być odkryte podczas procesu testowania. Przed zastosowaniem refaktoryzacji program powinien działać bez komplikacji.
+\subsection{Proces refaktoryzacji}
+Pierwszym krokiem refaktoryzacji powinno być wysokopoziomowe zrozumienie kodu z którym będzie się pracować i określenie jaką funkcjonalność ma on realizować.
+Jeśli to możliwe, warto zapytać autora o jego intencje w momencie tworzenia danego programu. 
+W tej fazie należy poznać jego strukturę, poprawić formatowanie, usunąć zakomentowany kod, wydzielić jego kluczowe sekcje i poprawić nazwy zmiennych na bardziej czytelne.
+Dzięki tym zabiegom zaoszczędza się czas, który trzeba by poświęcić na ponowne zrozumienie danego kodu.
+Na tym etapie dopuszczalne jest użycie komentarzy do oznaczenia ważnych miejsc programu. 
 
-\comment{
-\begin{itemize}
-\item opisać proces, jak przebiegała
-\item zebranie wymagań dot. refaktorowanego kodu
-\item czemu czasem łatwiej przepisać
-\item utworzenie interfejsu przyjaznego użytkownikowi
-\item architektura nowego rozwiązania
-\end{itemize}
-}
+Drugim krokiem jest uproszczenie warunków w pętlach i konstrukcjach warunkowych.
+Dobrą praktyką jest utworzenie na ich podstawie zmiennych, których nazwy powinny tłumaczyć co jest sprawdzane.
+Pozwala to zidentyfikować przeznaczenie bloków kodu będących pod tymi warunkami.
+Na tym etapie może się okazać, że część kodu nigdy nie jest wywoływana i jedyna funkcja jaką on pełni to dezinformacja. 
+
+Następnie należy zidentyfikować fragmenty kodu realizujące taką samą lub bardzo podobną funkcjonalność.
+Taki kod trzeba wydzielić jako metody prywatne i wywołać je w zidentyfikowanych miejscach. 
+Ważne jest, żeby nazwy tych metod opisywały jaki proces jest realizowany w ich wewnętrzu.  
+Im krótsze będą te metody, tym kod będzie bardziej czytelny i samo-opisujący się. 
+Przy wydzielaniu kodu należy pamietać o tym, żeby nie próbować przewidywać przyszłości i zapewniać funkcjonalności, które nigdzie nie będą używane.
+
+Jeśli podczas rozdzielania kodu na metody okaże się, że realizują one podobny proces, warto jest rozważyć utworzenie nowej klasy na ich podstawie.
+Ułatwi to testowanie kodu i zapewni im dodatkowy kontekst.
+
+Ostatnim krokiem refaktoryzacji powinna być próba identyfikacji wzorców projektowych jakie mogłyby pomóc opisać dany proces. 
+Ich użycie wprowadza więcej elastyczności do kodu i zwiększa jego czytelność poprzez jego systematyzację. 
+ 
+Proces refaktoryzacji nigdy się nie kończy, kod zawsze może być ładniejszy i bardziej czytelny, więc należy zachować umiar w jego ulepszaniu.
+Warto też wyrobić sobie nawyk korzystania z zasady skauta, która mówi: "zostaw kod, który edytujesz, lepszy niż go zastałeś".
