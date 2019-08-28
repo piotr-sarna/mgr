@@ -1,4 +1,21 @@
 % !TEX root = main.tex
 \section{Podsumowanie}
-Wykorzystanie GenericMonitoringTool zmniejsza to ilość miejsc, w których może zostać popełniony błąd podczas implementacji.
-//TODO
+GenericMonitoringTool rozwiązuje dwa największe problemy występujące przy monitorowaniu zmiennych w obrębie platformy Athena: konieczność zarządzania histogramami ROOT bezpośrednio w kodzie algorytmów oraz obsługę problemu ich synchronizacji pomiędzy wątkami.
+
+Pierwszy z nich został rozwiązany poprzez zdefiniowanie klas reprezentujących zmienne i grupy monitorowane, oraz stworzenie centralnego modułu do zarządzania obiektami ROOT. 
+Celem takiej architektury było zapewnienie przyjaznego i transparentnego dla użytkownika interfejsu do obsługi monitoringu.
+Wyeliminowała ona konieczność obsługi histogramów w algorytmach, co pozwoliło usunąć z nich zbędny i powtarzalny kod.
+Konsekwencją tego jest zmniejszenie liczby potencjalnych miejsc, gdzie mógł zostać popełniony błąd podczas implementacji.
+Dodatkową zaletą jest to, że programiści implementujący algorytmy mogą się teraz skupić na ich prawidłowej implementacji, zamiast na obsłudze histogramów.
+
+Rozwiązanie problemu synchronizacji wielu wątków przy wypełnianiu histogramów, nie byłoby możliwe bez refaktoringu całego rozwiązania wykonanego w ramach pierwszego problemu.
+Dzięki temu, że w nowej architekturze obsługa histogramów jest scentralizowana, łatwe stało się synchronizowanie wątków próbujących modyfikować histogramy. 
+Osiągnięte to zostało poprzez wprowadzenie sekcji krytycznych, osobnych dla każdego histogramu, które troszczą się o ich poprawne wypełnienie.
+
+Przy projektowaniu i implementacji nowego rozwiązania, bardzo ważną rolę odegrała znajomość zasad tworzenia czystego kodu i refaktoringu. 
+Pomogły one zidentyfikować problematyczne miejsca w kodzie, zrozumieć je i zdekomponować na małe specjalizowane klasy. 
+Dzięki temu, wynikowy kod stał się bardziej czytelny, łatwiejszy do zrozumienia oraz możliwy do testowania.
+Stworzenie testów pomogło wykryć problemy i błędy w dotychczasowej implementacji, oraz pozwoliło zdefiniować funkcjonalności oczekiwane od testowanego kodu. 
+Wszystkie te zabiegi pozwoliły stworzyć czytelny i wysokiej jakości kod. 
+
+Podsumowując, dzięki wszystkim powyższym zabiegom, GenericMonitoringTool stał się wartościowym następcą dawnego sposobu monitorowania algorytmów, czyniąc ten proces dużo łatwiejszym i przystępnym dla osób tworzących algorytmy.
