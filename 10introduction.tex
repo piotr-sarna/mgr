@@ -1,28 +1,28 @@
 % !TEX root = main.tex
 \section{Wstęp}
-Celem niniejszej pracy jest opisanie narzędzia \mbox{GenericMonitoringTool} stworzonego w ramach modułu \mbox{AthenaMonitoring} stanowiącego część środowiska Athena\cite{Athena} i opisanie jak umożliwiło ono monitorowanie jakości danych w wielowątkowych algorytmach. 
+Celem niniejszej pracy jest opisanie narzędzia \mbox{GenericMonitoringTool} stworzonego w ramach modułu \mbox{AthenaMonitoring} stanowiącego część środowiska Athena i opisanie jak umożliwiło ono monitorowanie jakości danych w wielowątkowych algorytmach. 
 Monitorowanie danych odbywa się poprzez generację histogramów i porównanie ich z referencjami. Opisane w pracy narzędzie dotyczy pierwszego kroku w tym procesie.
 Histogramy używane są z tego powodu że pozwalają na kompaktowe podsumowanie istotnych cech dużego zbioru danych. 
 W zastosowaniu do monitorowania jakości danych pozwalają na szybkie uchwycenie anomalii co w konsekwencji prowadzi do wdrożenia poprawek i polepszenia jakości danych czy wręcz do zlokalizowania krytycznych błędów w konfiguracji eksperymentu. 
 
-\subsection{Eksperyment ATLAS} \comment{https://atlas.cern/discover/about}
-ATLAS~\cite{} jest jednym z czterech głównych eksperymentów w ramach Wielkiego Zderzacza Hadronów(LHC)~\cite{} w ośrodku naukowym CERN. 
+\subsection{Eksperyment ATLAS}
+ATLAS~\cite{cern-atlas} jest jednym z czterech głównych eksperymentów w ramach Wielkiego Zderzacza Hadronów(LHC)~\cite{cern-lhc} w ośrodku naukowym CERN. 
 Jest to eksperyment fizyki cząstek elementarnych ogólnego przeznaczenia prowadzony przez międzynarodową grupę naukowców. 
 Został zaprojektowany w celu pełnego wykorzystania potencjału odkrywczego i ogromnego zakresu możliwości fizycznych, jakie zapewnia LHC.
 
-\subsection{Athena} \comment{https://atlassoftwaredocs.web.cern.ch/athena/}
-Athena jest platformą programistyczną, która umożliwia pracę z danymi pochodzącymi z eksperymentu ATLAS. 
+\subsection{Athena}
+Athena~\cite{cern-athena} jest platformą programistyczną, która umożliwia pracę z danymi pochodzącymi z eksperymentu ATLAS. 
 Obejmuje to m.in. filtracji danych, generowanie przypadków zdarzeń metodami Monte-Carlo, symulacje odpowiedzi detektora oraz rekonstrukcję danych. 
 Jego głównymi komponentami są algorytmy, które analizują i przekształcają dane pochodzące z eksperymentu. 
 Pozostałe komponenty środowiska to narzędzia (tools), za pomocą których implementowany jest wzorzec strategia. 
 Komponenty te pisane są w języku C++ a konfigurowane z użyciem skryptów napisanych w języku Python. 
 
-\subsection{ROOT} \comment{https://root.cern.ch/}
-ROOT~\cite{} jest środowiskiem stworzonym w CERN i Fermilab, które umożliwia pracę z wielkimi zbiorami danych, w celu ich statycznej analizy, wizualizacji i przechowywania. 
+\subsection{ROOT}
+ROOT~\cite{cern-root} jest środowiskiem stworzonym w CERN i Fermilab, które umożliwia pracę z wielkimi zbiorami danych, w celu ich statycznej analizy, wizualizacji i przechowywania. 
 Został on stworzony w języku C++ przez co dobrze komponuje się z frameworkiem Athena i jest w nim używany na potrzeby prezentowania wyników działania algorytmów. 
 
 \subsection{AthenaMonitoring i GenericMonitoringTool}
-AthenaMonitoring jest modułem stworzonym w ramach frameworka Athena.
+AthenaMonitoring~\cite{atlas-athena-monitoring} jest modułem stworzonym w ramach frameworka Athena.
 Dostarcza on niezbędne narzędzia do monitorowania przebiegu algorytmów i tworzenia na ich podstawie histogramów ROOT.
 Proces monitoringu jest ważny dlatego, że ilość danych produkowanych przez Eksperyment ATLAS jest ogromna i jedynym sposobem, aby móc je przeanalizować są wykresy i histogramy.
 Pozwalają one znaleźć odchyły od normy w danych pochodzących z eksperymentu, oraz ułatwiają obserwacje zależności pomiędzy różnymi zbiorami danych.
