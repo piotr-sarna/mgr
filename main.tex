@@ -10,10 +10,48 @@
 \usepackage{indentfirst}
 \usepackage[labelfont=bf]{caption}
 \usepackage{setspace}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{accsupp}
+\newcommand*{\noaccsupp}[1]{\BeginAccSupp{ActualText={}}#1\EndAccSupp{}}
 \newcommand{\figref}[1]{\figurename~\ref{#1}}
 \newcommand{\tabref}[1]{\tablename~\ref{#1}}
+\newcommand{\lstref}[1]{\lstlistingname~\ref{#1}}
 
 \newcommand{\comment}[1]{}
+
+\lstdefinestyle{shared}{
+    numbers=left,
+    numbersep=1em,
+    numberstyle=\tiny\color{black}\noaccsupp,
+    frame=single,
+    framesep=\fboxsep,
+    framerule=\fboxrule,
+    rulecolor=\color{black},
+    xleftmargin=\dimexpr\fboxsep+\fboxrule\relax,
+    xrightmargin=\dimexpr\fboxsep+\fboxrule\relax,
+    breaklines=true,
+    tabsize=2,
+    columns=flexible,
+    captionpos=t,
+}
+
+\lstdefinestyle{python}{
+    style=shared,
+    language={Python},
+    basicstyle=\linespread{1}\small\tt,
+    keywordstyle=\color{blue},
+    commentstyle=\color[rgb]{0.13,0.54,0.13},
+    morekeywords={
+        Console,
+        WriteLine,
+        int,
+    },
+}
+
+\lstnewenvironment{python}[1][]{
+    \lstset{style=python,#1}
+}{}
 
 \addbibresource{bibliography.bib}
 
@@ -22,7 +60,6 @@
 \begin{document}
 
 \include{00title}
-\spacing{1.5}
 \include{01tableofcontents}
 \include{10introduction}
 \include{15refactoring}
