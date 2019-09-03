@@ -71,10 +71,39 @@ Jednak najważniejszy wniosek z nich jest taki, że GenericMonitoringTool nie wp
 Różnica w czasie wykonania na korzyść zmiennej monitorowanej może być również spowodowana optymalizacjami dokonanymi przez kompilator. 
 
 \subsection{Testy jednostkowe}
+Jednym z wymogów przy tworzeniu nowego kodu do monitoringu było to, że musi on posiadać testy jednostkowe.
+Aby to osiągnąć, został on zaprojektowany w sposób umożliwiający jego testowanie - wprowadzenie interfejsów i klas bazowych, oraz użycie wstrzykiwania zależności.
+Pozwala to odizolować kod który chcemy zweryfikować i napisać testy które opiszą oczekiwane od niego zachowanie.
+
+Athena dostarcza podstawowe narzędzia do tworzenia testów jednostkowych, takie jak np. asercje, jednak nie definiuje ona ich struktury.
+Aby to usystematyzować powstał szablon pliku z testami dla kodu monitoringu, przedstawiony został na \lstref{lst:athena:unit_test_template}.
+
+\lstinputlisting[
+	style=cpp, 
+	caption=Szablon pliku z testami jednostkowymi, 
+	label={lst:athena:unit_test_template}
+]{ExampleClassTestSuite.cxx}
+
+Szablon podzielony jest na następujące sekcje:
 \begin{itemize}
-\item opis struktury testów
-\item opisać makra
-\item opisać rejestracje testów
-\item co dają mocki
-\item kod~\cite{histogram-factory-test-suite}
+\item Zarejestrowane testy - w tej części, użytkownik jest zobowiązany do zadeklarowania testów, które mają zostać uruchomione. Wykorzystane jest tutaj makro `REGISTER\_TEST\_CASE`, którego celem jest uproszczenie tego procesu. Jej istnienie wynika z ograniczeń języka C++, który nie pozwala pobrać listy wszystkich dostępnych metod dla danej klasy.
+\item Kod testów - definiuje ona metody `beforeEach` - wywoływana przed każdym testem - i `afterEach` - wywoływana po każdym teście. W razie potrzeby, użytkownik powinien w nich odpowiednio przygotować środowisko do testów. W tej sekcji użytkownik definiuje metody, które posłużą do weryfikacji poprawności zachowania testowanej klasy. Ich nazwa powinna zaczynać się od `test\_should`.
+\item Metody pomocnicze - miejsce na metody pomocnicze zdefiniowane przez użytkownika na potrzeby testów.
+\item Inicjalizacja i uruchomienie - w tej sekcji zdefiniowany jest sposób uruchomienia testów.
+\item Rejestracja testów - tej części metody testowe są przygotowywane do uruchomienia. Użytkownik nie powinien jej modyfikować.  
+\item Pola klasy - zawiera deklaracje wszystkich zmiennych. `m\_testObj` jest specjalną zmienną, która zawiera obiekt testowanej klasy.  
 \end{itemize}
+
+Szablon ten został wykorzystany na potrzeby przetestowania wszystkich najważniejszych komponentów GenericMonitoringTool.
+
+\begin{cpp}[caption=Jeden z testów zdefiniowanych w ramach HistogramFactoryTestSuite~\cite{histogram-factory-test-suite}, label={lst:athena:histogram_factory_test_suite}]
+void test_shouldRegisterAndReturnTH1DHistogram() {
+   TH1D* const histogram = createHistogram<TH1D>("TH1D");
+   VALUE(m_histSvc->exists("/HistogramFactoryTestSuite/TH1D")) EXPECTED(true);
+   VALUE(histogram) NOT_EXPECTED(nullptr);
+    }
+\end{cpp}
+
+W celu poprawnego odizolowania testowanego kodu, powstały klasy dostępne tylko na potrzeby testów - `mocki`, których zadaniem jest imitowanie prawdziwych komponentów GenericMonitoringTool.
+Ich zachowanie jest całkowicie pod kontrolą użytkownika.
+Takie obiekty, w połączeniu ze wstrzykiwaniem zależności, umożliwiają całkowite uniezależnienie weryfikowanego kodu od innych komponentów.
