@@ -1,26 +1,27 @@
 % !TEX root = main.tex
-\section{GenericMonitoringTool jako wynik refaktoryzacji kodu}
-Wynikiem refaktoryzacji modułu AthenaMonitoring i przykładowych algorytmów monitorowanych jest klasa GenericMonitoringTool.
-Agreguje ona funkcjonalności zidentyfikowane jako kluczowe dla monitoringu, czyli możliwość deklaracji histogramów oraz wypełnianie ich zmiennymi monitorowanymi z kodu algorytmów.
+\section{Narzędzie do monitorowania GenericMonitoringTool}
+Wynikiem zmian w module AthenaMonitoring i kodzie algorytmów monitorowanych jest klasa GenericMonitoringTool.
+Agreguje ona funkcjonalności zidentyfikowane jako kluczowe dla monitoringu, czyli możliwość deklaracji histogramów oraz wypełnianie ich wartościami zmiennych monitorowanych obliczonych w algorytmach.
 Jednak w przeciwieństwie do pierwotnej implementacji, dostarcza ona kilka poziomów abstrakcji, umożliwiających centralizację połączenia pomiędzy tymi dwiema warstwami.
-Refaktoryzacja wprowadziła wiele nowych rozwiązań, które sprawiły, że kod stał się bardziej elastyczny i łatwiejszy w użyciu.
+Nowa implementacja wprowadziła wiele rozwiązań, które sprawiły, że kod stał się bardziej czytelny, elastyczny i łatwiejszy w użyciu.
+Moduł AthenaMonitoring jest przykładem kodu, który łatwiej jest przepisać, z wykorzystaniem fragmentów starego kodu, niż refaktoryzować. 
 
-Największym zyskiem z nowej implementacji jest oddzielenie kodu zarządzającego cyklem życia obiektów ROOT od kodu algorytmów. 
+Największym zyskiem z tych zmian jest oddzielenie kodu zarządzającego cyklem życia obiektów ROOT od kodu algorytmów. 
 Pozwoliło to zredukować ich objętość i umożliwiło osobom implementującym algorytmy skupienie się na ich głównym zadaniu, zamiast na obsłudze histogramów.
 Dodatkowo sprawia to, że kod monitoringu stał się scentralizowany, dzięki czemu możliwe stały się aktualizacje ROOT, bez potrzeby modyfikowania już istniejących algorytmów.
 
-Po refaktoryzacji możliwe stało się rozwiązanie problemu scalania histogramów.
-Dzięki temu, że w nowym rozwiązaniu istnieje centralny punkt w którym obsługiwane są histogramy, łatwe stało się dodanie zabezpieczeń dla wywołań wielowątkowych w postaci użycia `mutex`ów.
+Z wykorzystaniem GenericMonitoringTool możliwe stało się rozwiązanie problemu scalania histogramów.
+Jest to konsekwencją tego, że w nowym rozwiązaniu istnieje centralny punkt w którym obsługiwane są histogramy.
+Zatem łatwe stało się dodanie zabezpieczeń dla wywołań wielowątkowych w postaci użycia `mutex`ów.
 Zapewniają one spójność danych wpisywanych do obiektów ROOT, a mają przy tym bardzo mały narzut czasowy.
 
 Wdrożone warstwy abstrakcji, umożliwiły łatwiejsze dodawanie nowych funkcjonalności, które mogą realizować bardzo złożone scenariusze wypełniania histogramów.
 Dobrym przykładem jest tu klasa LumiblockHistogramProvider, która realizuje funkcjonalność podziału danych na postawie kontekstu w jakim zostały one wygenerowane. 
-Zaimplementowanie jej funkcjonalności w kodzie algorytmu byłoby bardzo trudnym zadaniem. 
+Zaimplementowanie jej funkcjonalności w starej konwencji byłoby bardzo trudnym zadaniem. 
 
-Dodatkowym zyskiem z takiego rozdzielenia odpowiedzialności, było umożliwienie tworzenia testów jednostkowych. 
-Znacznie podniosło to jakość kodu pisanego na potrzeby GenericMonitoringTool.
-Umożliwiło to również wcześniejsze wykrywanie problemów w programie, bez potrzeby uruchomiania algorytmów. 
-Znacznie przyśpieszyło to proces tworzenia nowego kodu.
+Dodatkowym zyskiem z takiego rozdzielenia odpowiedzialności i wprowadzenia kilku warstw abstrakcji jest możliwość łatwego tworzenia testów jednostkowych. 
+Znacznie podniosło to jakość kodu pisanego na potrzeby monitoringu, przyśpieszyło jego proces powstawania oraz pozwoliło na wcześniejsze wykrywanie problemów.
+Spowodowane jest to tym, że dla nowego rozwiązania, nie ma konieczności uruchamiania kosztownych czasowo algorytmów, aby przetestować kod.
 
 \subsection{Wydajność wielowątkowa}
 
@@ -28,6 +29,7 @@ Znacznie przyśpieszyło to proces tworzenia nowego kodu.
 \centering
 \includegraphics[width=1\textwidth]{img/avg_run_time.png}
 \caption{
+Wszystkie wyniki są średnią z 10 uruchomień.
 0 - czas losowania 40M danych; 
 1 - bezpośrednie wypełnianie histogramu z algorytmu;
 2 - zmienna monitorowana bez synchronizacji wątków;
@@ -53,7 +55,7 @@ Znacznie przyśpieszyło to proces tworzenia nowego kodu.
 \end{figure}
 
 Podczas implementacji zabezpieczeń przetwarzania wielowątkowego dla GenericMonitoringTool, bardzo ważne było sprawdzenie jak duży jest narzut na synchronizacje wątków. 
-Przetestowane zostało kilka rozwiązań, w rezultacie najlepsze okazało się zastosowanie `mutex`'a z biblioteki standardowej C++ wewnątrz zmiennej monitorowanej. 
+Przetestowane zostało kilka rozwiązań, w czego rezultacie najlepsze okazało się zastosowanie `mutex`'a z biblioteki standardowej C++ wewnątrz zmiennej monitorowanej. 
 \figref{fig:athena:avgRunTime} prezentuje wyniki tych testów. 
 W ich przypadku, czas działania algorytmu jest pomijalnie mały, gdyż jest w nich losowana pojedyncza wartość liczbowa.
 W rzeczywistym użyciu spodziewane jest, że czas wykonywania algorytmu będzie dużo większy od czasu potrzebnego na obsługę sekcji krytycznej. 
@@ -62,9 +64,11 @@ Najbardziej reprezentatywne na tym wykresie są przypadki 1,3 oraz 3,3.
 1,3 jest wynikiem działania kodu, który wykorzystuje mechanizmy dostępne przed refaktoryzacją.
 Użytkownik samemu obsługuje synchronizacje z wykorzystaniem mutex'a dla 800 wątków i wypełnia histogram odwołując się bezpośrednio do obiektów frameworka ROOT.
 
-3,3 jest wynikiem działania kodu wykorzystującego zmienną monitorowaną, która w sposób niewidoczny dla użytkownika troszczy się o synchronizację i wypełnienie histogramów ROOT. 
+3,3 jest wynikiem działania kodu wykorzystującego zmienną monitorowaną, która w sposób niewidoczny dla użytkownika dba o synchronizację i wypełnienie histogramów ROOT. 
 
-Różnica w czasie wykonania na korzyść zmiennej monitorowanej spowodowana jest optymalizacjami dokonanymi przez kompilator.
+Testy były przeprowadzane na wirtualizowanym środowisku LXPLUS~\cite{cern-lxplus}, które jest współdzielone między wieloma użytkownikami, co może obciążać te wyniki błędem. 
+Jednak najważniejszy wniosek z nich jest taki, że GenericMonitoringTool nie wprowadza znaczącego narzutu na obsługę histogramów w porównaniu do podejścia bezpośredniego.
+Różnica w czasie wykonania na korzyść zmiennej monitorowanej może być również spowodowana optymalizacjami dokonanymi przez kompilator. 
 
 \subsection{Testy jednostkowe}
 \begin{itemize}
