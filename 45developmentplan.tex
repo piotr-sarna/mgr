@@ -5,15 +5,18 @@ W momencie pisania tej pracy, w jej kodzie zadeklarowanych jest ponad 450 zmienn
 Mogą one wypełnić danymi prawie 4500 zdefiniowanych histogramów.
 Do tej pory nie zostały zgłoszone żadne krytyczne błędy, które uniemożliwiałyby pracę z tym narzędziem.
 
-Obecnie toczą się prace nad dodawaniem nowych funkcjonalności do kodu GenericMonitoringTool.
-Mają one na celu pokrycie dodatkowych przypadków użycia, dzięki którym możliwe będzie dotarcie do większej liczby użytkowników. 
-Został on również szeroko wykorzystany podczas technicznego "reprocessingu" dla 22 wersji platformy Athena, dla którego przykładowe histogramy zostały przedstawione na \figref{fig:athena:histogram_TH1}, \figref{fig:athena:histogram_TH1_time} i \figref{fig:athena:histogram_TH2}.
+\subsection{Zastosowanie w systemie wyzwalania online}
+Pierwotnie GenericMonitoringTool był tworzony z myślą o użyciu go w systemie wyzwalania online i to w tym obszarze jest najczęściej wykorzystywany. 
+Dla tego rodzaju użycia, szybkość działania jest jedną z kluczowych cech. 
+Było to powodem przeprowadzenia testów wydajnościowych opisanych w rozdziale \ref{generic-monitoring-tool-description}.
+
+GenericMonitoringTool został szeroko wykorzystany podczas technicznego "reprocessingu" dla 22 wersji platformy Athena, dla którego przykładowe histogramy zostały przedstawione na \figref{fig:athena:histogram_TH1}, \figref{fig:athena:histogram_TH1_time} i \figref{fig:athena:histogram_TH2}.
 
 \begin{figure}[!ht]
 \centering
 \includegraphics[width=1\textwidth]{img/histogram_TH1.png}
 \caption{
-Przykładowy histogram TH1 dla zmiennej monitorowanej typu 'Scalar', utworzony z pomocą GenericMonitoringTool. /// PT ped poprzeczny * ładunek
+Histogram TH1F dla zmiennej monitorowanej typu 'Scalar', utworzony z pomocą GenericMonitoringTool. Powstał podczas technicznego "reprocessingu" 22 wersji platformy Athena.
 }
 \label{fig:athena:histogram_TH1}
 \end{figure}
@@ -22,7 +25,7 @@ Przykładowy histogram TH1 dla zmiennej monitorowanej typu 'Scalar', utworzony z
 \centering
 \includegraphics[width=1\textwidth]{img/histogram_TH1_time.png}
 \caption{
-Przykładowy histogram TH1 dla zmiennej monitowanej typu 'Timer', utworzony z pomocą GenericMonitoringTool 
+Histogram TH1F dla zmiennej monitorowanej typu 'Timer', utworzony z pomocą GenericMonitoringTool. Powstał podczas technicznego "reprocessingu" 22 wersji platformy Athena.
 }
 \label{fig:athena:histogram_TH1_time}
 \end{figure}
@@ -31,12 +34,12 @@ Przykładowy histogram TH1 dla zmiennej monitowanej typu 'Timer', utworzony z po
 \centering
 \includegraphics[width=1\textwidth]{img/histogram_TH2.png}
 \caption{
-Przykładowy histogram TH2 dla dwóch zmiennych monitowanych typu 'Scalar', utworzony z pomocą GenericMonitoringTool /// colz box opcje histogramu root /// mapa zrekonsturowanych sladow
+Histogram TH2F dla dwóch zmiennych monitorowanych typu 'Collection', utworzony z pomocą GenericMonitoringTool. Powstał podczas technicznego "reprocessingu" 22 wersji platformy Athena.
 }
 \label{fig:athena:histogram_TH2}
 \end{figure}
 
-\begin{python}[caption=Deklaracja histogramów, label={lst:athena:histogram_declaration}]
+\begin{python}[caption={Fragment kodu konfiguracji Athena Python~\cite{histogram-declaration}, zawierającego deklarację histogramów przedstawionych na \figref{fig:athena:histogram_TH1}, \figref{fig:athena:histogram_TH1_time} i \figref{fig:athena:histogram_TH2}}, label={lst:athena:histogram_declaration}]
 class TrigL2MuonSAMonitoring(GenericMonitoringTool):
     def __init__ (self, name = "TrigL2MuonSAMonitoring"):
         super(TrigL2MuonSAMonitoring, self).__init__( name )
@@ -50,30 +53,7 @@ class TrigL2MuonSAMonitoring(GenericMonitoringTool):
         self.defineHistogram('TIME_Calibration_Streamer', type='TH1F', path='EXPERT', title="Calibration streamer time (us)", xbins=100, xmin=0, xmax=50000 )
 \end{python}
 
-\begin{cpp}[caption=TIME Calibration Streamer, label={lst:athena:time_calibration_streamer}]
-StatusCode MuFastSteering::findMuonSignature(
-  const DataVector<const TrigRoiDescriptor>& roids,
-  const DataVector<const LVL1::RecMuonRoI>& muonRoIs,
-  DataVector<xAOD::L2StandAloneMuon>& outputTracks,
-  TrigRoiDescriptorCollection& outputID,
-  TrigRoiDescriptorCollection& outputMS,
-  DataVector<xAOD::TrigComposite>& outputComposite )
-{
-(*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
-  auto calibrationTimer = Monitored::Timer( "TIME_Calibration_Streamer" );
-
-  auto monitorIt	= Monitored::Group(m_monTool, prepTimer, patternTimer, stationFitterTimer, trackFitterTimer, trackExtraTimer, calibrationTimer );
-(*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
-  calibrationTimer.start();
-(*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
-  sc = m_calStreamer->createRoiFragment(*p_roi,tp,m_mdtHits_normal, m_rpcHits, m_tgcHits, m_calBufferSize, m_calDataScouting, updateTriggerElement); 
-(*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
-  calibrationTimer.stop();
-(*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
-}
-\end{cpp}
-
-\begin{cpp}[caption=TrackPt, label={lst:athena:track_pt}]
+\begin{cpp}[caption={Fragment kodu algorytmu~\cite{histogram-fill}, odpowiadającego za wypełnienie histogramu przedstawionego na \figref{fig:athena:histogram_TH1}, za pomocą zmiennej monitorowanej `TrackPt`.}, label={lst:athena:track_pt}]
 StatusCode MuFastSteering::updateMonitor(const LVL1::RecMuonRoI* roi,
   const TrigL2MuonSA::MdtHits& mdtHits,
   std::vector<TrigL2MuonSA::TrackPattern>& trackPatterns )
@@ -89,10 +69,33 @@ StatusCode MuFastSteering::updateMonitor(const LVL1::RecMuonRoI* roi,
 }
 \end{cpp}
 
-\begin{cpp}[caption=TrackEta vs TrackPhi, label={lst:athena:track_eta_vs_track_phi}]
+\begin{cpp}[caption={Fragment kodu algorytmu~\cite{histogram-fill}, odpowiadającego za wypełnienie histogramu przedstawionego na \figref{fig:athena:histogram_TH1_time}, za pomocą zmiennej monitorowanej `TIME\_Calibration\_Streamer`.}, label={lst:athena:time_calibration_streamer}]
+StatusCode MuFastSteering::findMuonSignature(
+  const DataVector<const TrigRoiDescriptor>& roids,
+  const DataVector<const LVL1::RecMuonRoI>& muonRoIs,
+  DataVector<xAOD::L2StandAloneMuon>& outputTracks,
+  TrigRoiDescriptorCollection& outputID,
+  TrigRoiDescriptorCollection& outputMS,
+  DataVector<xAOD::TrigComposite>& outputComposite )
+{
+(*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
+  auto calibrationTimer = Monitored::Timer("TIME_Calibration_Streamer");
+
+  auto monitorIt	= Monitored::Group(m_monTool, prepTimer, patternTimer, stationFitterTimer, trackFitterTimer, trackExtraTimer, calibrationTimer );
+(*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
+  calibrationTimer.start();
+(*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
+  sc = m_calStreamer->createRoiFragment(*p_roi,tp,m_mdtHits_normal, m_rpcHits, m_tgcHits, m_calBufferSize, m_calDataScouting, updateTriggerElement); 
+(*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
+  calibrationTimer.stop();
+(*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
+}
+\end{cpp}
+
+\begin{cpp}[caption={Fragment kodu algorytmu~\cite{histogram-fill}, odpowiadającego za wypełnienie histogramu przedstawionego na \figref{fig:athena:histogram_TH2}, za pomocą monitorowanych kolekcji `TrackEta` oraz `TrackPhi`.}, label={lst:athena:track_eta_vs_track_phi}]
 StatusCode MuFastSteering::updateMonitor(const LVL1::RecMuonRoI* roi,
   const TrigL2MuonSA::MdtHits& mdtHits,
-  std::vector<TrigL2MuonSA::TrackPattern>& trackPatterns )
+  std::vector<TrigL2MuonSA::TrackPattern>& trackPatterns)
 {
 (*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
   std::vector<float> t_eta, t_phi;
@@ -105,7 +108,7 @@ StatusCode MuFastSteering::updateMonitor(const LVL1::RecMuonRoI* roi,
 (*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
   auto monitorIt	= Monitored::Group(m_monTool, inner_mdt_hits, middle_mdt_hits, outer_mdt_hits, invalid_rpc_roi_number, efficiency, sag_inverse, address, absolute_pt, sagitta, track_pt, track_eta, track_phi, failed_eta, failed_phi, res_inner, res_middle, res_outer, fit_residuals );
 (*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
-  if ( fabs(pattern.etaMap) > ZERO_LIMIT || fabs(pattern.phiMS) > ZERO_LIMIT ) {
+  if (fabs(pattern.etaMap) > ZERO_LIMIT || fabs(pattern.phiMS) > ZERO_LIMIT) {
     t_eta.push_back(pattern.etaMap);
     t_phi.push_back(pattern.phiMS);
   }
@@ -113,13 +116,20 @@ StatusCode MuFastSteering::updateMonitor(const LVL1::RecMuonRoI* roi,
 }
 \end{cpp}
 
-W przyszłości, planowana jest m.in. aktualizacja framworka ROOT.
-Jego najnowsze wersje zapewniają bezpieczeństwo dla przetwarzania wielowątkowego i wieloprocesowego. 
-Taka zmiana pozwoli usunąć niepotrzebne sekcje krytyczne z kodu GenericMonitoringTool.
-
-\subsection{Zastosowanie w systemie wyzwalania online}
-//TODO
 \subsection{Zastosowanie do monitorowania offline - Data Quality}
-//TODO~\cite{atlas-multithread-article}
+Obecnie toczą się prace nad dodawaniem nowych funkcjonalności do kodu GenericMonitoringTool na potrzeby monitoringu offline~\cite{atlas-multithread-article}.
+Mają one na celu pokrycie bardziej skompilowanych przypadków użycia tego narzędzia, gdzie czas wykonania nie jest tak bardzo istotny. 
+Dzięki którym możliwe będzie szersze wykorzystanie tego narzędzia i dotarcie do większej liczby użytkowników. 
+
+//TODO Odpowiedź od Petera Onyisi 
+
 \subsection{Możliwe kierunki rozwoju}
-//TODO
+W przyszłości planowana jest aktualizacja wersji frameworka ROOT, używanego w obrębie platformy Athena.
+Jego najnowsze wydania, wewnętrznie zapewniają bezpieczeństwo dla przetwarzania wielowątkowego i wieloprocesowego.
+Pozwoli to usunąć nadmiarowe sekcje krytyczne z kodu GenericMonitoringTool.
+
+Bardzo prawdopodobne jest, że będą powstawały kolejne komponenty, dodające do tego narzędzia nowe funkcjonalności.
+Obsłużą one bardziej skomplikowane i specyficzne przypadki użycia.  
+
+Koncept monitorowanego kodu i rozwiązania zastosowane w ramach obecnej implementacji, mogą zostać użyte w innych projektach do rozwiązania podobnych problemów.
+W chwili pisania tej pracy, kod GenericMonitoringTool jak i całego modułu AthenaMonitoring, jest publiczny, więc każdy może zrobić z niego użytek. 
