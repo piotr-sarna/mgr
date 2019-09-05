@@ -1,10 +1,4 @@
 % !TEX root = main.tex
-\comment{
-\item kto używa kodu, dostosowanie do klienta //TODO
-\item czemu nowe rozwiązanie pomoże unikać pomyłek w danych wejściowych!!!
-\item architektura nowego rozwiązania
-\item utworzenie interfejsu przyjaznego użytkownikowi
-}
 \section{Nowa implementacja modułu AthenaMonitoring}
 Głównym celem refaktoringu framworka, było oddzielenie kodu odpowiedzialnego za zarządzanie histogramami od kodu algorytmów. 
 Dzięki takiemu rozgraniczeniu odpowiedzialności, twórcy algorytmów mogą skupić się na ich poprawnej implementacji i określeniu które wartości powinny znaleźć się na wykresach jako wynik. 
@@ -17,6 +11,15 @@ Twórca algorytmu deklaruje zbiór wartości (obejmuje to skalary oraz tablice) 
 Natomiast użytkownik takiego algorytmu, deklaruje jakie wykresy chciałby stworzyć i z użyciem których zmiennych. 
 Następuje to w kroku konfiguracyjnym Athena Python, gdzie definiuje on typy histogramów, parametry binowania, zakresy wartości, opisy itd. 
 Taki interfejs pozwala uniknąć rekompilacji kodu C++ za każdym razem, gdy użytkownik zmienia parametry wykresu. 
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=1\textwidth]{img/classes_relations.png}
+\caption{
+TODO
+}
+\label{fig:athena:classesRelations}
+\end{figure}
 
 \begin{figure}[!ht]
 \centering
