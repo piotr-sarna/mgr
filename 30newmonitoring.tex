@@ -14,15 +14,6 @@ Taki interfejs pozwala uniknąć rekompilacji kodu C++ za każdym razem, gdy uż
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=1\textwidth]{img/classes_relations.png}
-\caption{
-Diagram przedstawia zależności pomiędzy klasami, stworzonymi na potrzeby nowego monitoringu i narzędzia GenericMonitoringTool. TNamed jest bazowym typem pochodzącym z frameworka ROOT, który reprezentuje histogramy.
-}
-\label{fig:athena:classesRelations}
-\end{figure}
-
-\begin{figure}[!ht]
-\centering
 \includegraphics[width=0.75\textwidth]{img/algo_init.png}
 \caption{
 Przygotowanie instancji GenericMonitoringTool i monitorowanych algorytmów w konfiguracji Athena Python. Na tym etapie niezbędne jest zadeklarowanie histogramów, które powinny zostać utworzone jako wynik uruchomienia skryptu.
@@ -37,6 +28,24 @@ Przygotowanie instancji GenericMonitoringTool i monitorowanych algorytmów w kon
 Przygotowanie zmiennych i grup w monitorowanym algorytmie, oraz przekazanie kontekstu do grupy w postaci instancji GenericMonitoringTool. Pozwala to skojarzyć zadeklarowane histogramy ze zmiennymi występującymi w tej grupie. 
 }
 \label{fig:athena:algoRun}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=1\textwidth]{img/classes_relations.png}
+\caption{
+Diagram przedstawia zależności pomiędzy klasami, stworzonymi na potrzeby nowego monitoringu i narzędzia GenericMonitoringTool. TNamed jest bazowym typem pochodzącym z frameworka ROOT, który reprezentuje histogramy.
+}
+\label{fig:athena:classesRelations}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=1\textwidth]{img/classes_sequence.png}
+\caption{
+Diagram sekwencji wypełnienia histogramu ROOT z kodu algorytmu z użyciem GenericMonitoringTool, zmiennych monitorowanych i grup.
+}
+\label{fig:athena:classesSequence}
 \end{figure}
 
 \subsection{Deklaracja histogramu}
