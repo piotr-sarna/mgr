@@ -56,7 +56,7 @@ Wszystkie wyniki są średnią z 10 uruchomień.
 
 Podczas implementacji zabezpieczeń przetwarzania wielowątkowego dla GenericMonitoringTool, bardzo ważne było sprawdzenie jak duży jest narzut na synchronizacje wątków. 
 Przetestowane zostało kilka rozwiązań, w czego rezultacie najlepsze okazało się zastosowanie `mutex`'a z biblioteki standardowej C++ wewnątrz zmiennej monitorowanej. 
-\figref{fig:athena:avgRunTime} prezentuje wyniki tych testów. 
+Rysunek~\ref{fig:athena:avgRunTime} prezentuje wyniki tych testów. 
 W ich przypadku, czas działania algorytmu jest pomijalnie mały, gdyż jest w nich losowana pojedyncza wartość liczbowa.
 W rzeczywistym użyciu spodziewane jest, że czas wykonywania algorytmu będzie dużo większy od czasu potrzebnego na obsługę sekcji krytycznej. 
 Najbardziej reprezentatywne na tym wykresie są przypadki 1,3 oraz 3,3.
@@ -76,7 +76,7 @@ Aby to osiągnąć, został on zaprojektowany w sposób umożliwiający jego tes
 Pozwala to odizolować kod który chcemy zweryfikować i napisać testy które opiszą oczekiwane od niego zachowanie.
 
 Athena dostarcza podstawowe narzędzia do tworzenia testów jednostkowych, takie jak np. asercje, jednak nie definiuje ona ich struktury.
-Aby to usystematyzować powstał szablon pliku z testami dla kodu monitoringu, przedstawiony został na \lstref{lst:athena:unit_test_template}.
+Aby to usystematyzować powstał szablon pliku z testami dla kodu monitoringu, przedstawiony został na listingu~\ref{lst:athena:unit_test_template}.
 
 \lstinputlisting[
 	style=cpp, 

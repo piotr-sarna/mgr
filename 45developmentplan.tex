@@ -1,16 +1,37 @@
 % !TEX root = main.tex
 \section{Obecny stan i dalszy rozwój narzędzia GenericMonitoringTool}
-Narzędzie GenericMonitoringTool jest szeroko i chętnie wykorzystywane w ramach platformy Athena, na potrzeby tworzenia histogramów i monitorowania kodu.
+Narzędzie GenericMonitoringTool staje się chętnie wykorzystywanym rozwiązaniem w ramach platformy Athena, na potrzeby tworzenia histogramów i monitorowania kodu.
 W momencie pisania tej pracy, w jej kodzie zadeklarowanych jest ponad 450 zmiennych monitorowanych w obrębie 53 różnych algorytmów. 
 Mogą one wypełnić danymi prawie 4500 zdefiniowanych histogramów.
-Do tej pory nie zostały zgłoszone żadne krytyczne błędy, które uniemożliwiałyby pracę z tym narzędziem.
 
 \subsection{Zastosowanie w systemie wyzwalania online}
 Pierwotnie GenericMonitoringTool był tworzony z myślą o użyciu go w systemie wyzwalania online i to w tym obszarze jest najczęściej wykorzystywany~\cite{online-monitoring-guide}. 
 Dla tego rodzaju użycia, szybkość działania jest jedną z kluczowych cech. 
 Było to powodem przeprowadzenia testów wydajnościowych opisanych w rozdziale \ref{generic-monitoring-tool-description}.
 
-GenericMonitoringTool został szeroko wykorzystany podczas technicznego "reprocessingu" dla 22 wersji platformy Athena, dla którego przykładowe histogramy zostały przedstawione na \figref{fig:athena:histogram_TH1}, \figref{fig:athena:histogram_TH1_time} i \figref{fig:athena:histogram_TH2}.
+GenericMonitoringTool został szeroko wykorzystany podczas technicznego "reprocessingu" dla 22 wersji platformy Athena, dla którego przykładowe histogramy zostały przedstawione na rysunkach~\ref{fig:athena:histogram_TH1},~\ref{fig:athena:histogram_TH1_time},~\ref{fig:athena:histogram_TH2}.
+Konfigurację, w której zadeklarowano te histogramy przedstawiono na listingu~\ref{lst:athena:histogram_declaration}. W liniach 7, 9 i 11 użyto metodę pomocniczą `defineHistogram`, która upraszcza i systematyzuje proces deklaracji histogramu w ramach narzędzia GenericMonitoringTool. To w tych liniach określone zostały: nazwy zmiennych monitorowanych, typ histogramu, ścieżka gdzie zostanie zachowany histogram, jego tytuł, oraz zakresy wartości na poszczególnych osiach.
+Natomiast na listingach~\ref{lst:athena:track_pt},~\ref{lst:athena:time_calibration_streamer},~\ref{lst:athena:track_eta_vs_track_phi}, dołączone zostały odpowiadające fragmenty kodu C++, odpowiedzialnego za stworzenie zmiennych i grup monitorowanych oraz wypełnienie ich danymi.
+
+I tak zmienna monitorowana, poprzeczny pęd śladu (w praktyce pęd $\times$ ładunek) jest deklarowana jako skalar - listing~\ref{lst:athena:track_pt}, linia 6. 
+Następnie definiowana jest grupa monitorowana, w której wraz z tą zmienna, definiowane są inne parametry śladu muonów (np. kąty emisji czy ilości sygnałów w detektorze, które użyte zostały w rekonstrukcji) znalezionych przez szybki algorytm rekonstrukcji używany online - linia 8. 
+Kolejnym krokiem jest przypisanie wartości do tej zmiennej, które jest zrealizowane w linii 10.
+Opcjonalną operacją jest użycie zmiennej monitorowanej jako zwykłej wartości liczbowej `double`- przedstawione w linii 11.
+
+Listing~\ref{lst:athena:time_calibration_streamer} prezentuje monitorowanie czasu wykonania algorytmu poprzez użycie klasy Monitored::Timer - linia 10. 
+Podobnie jak w przypadku zmiennej typu skalar, do poprawnego działania niezbędne jest stworzenie grupy monitorowanej - linia 12.
+Kolejnym krokiem jest uruchomienie `timera` poprzez wywołanie metody `start()` w linii 14.
+Następnie wykonywane są operacje, których czas wykonania chcemy zmierzyć; w tym wypadku jest to wywołanie metody `createRoiFragment` - linia 16.
+Ostatnią akcją jest wywołanie metody `stop()` na obiekcie `timer`, które kończy pomiar czasu - linia 18.
+
+Listing~\ref{lst:athena:track_eta_vs_track_phi} przedstawia proces wypełnienia histogramu 2D z użyciem monitorowanych kolekcji.
+W liniach 6, 8, 9 przygotowywane są 2 zmienne typu `std::vector<float>`, które następnie przekazywane są do monitorowania w liniach 11 i 12.
+Tak samo jak w przypadku zmiennej typu skalar i `timer`, niezbędne jest zadeklarowanie grupy monitorowanej zawierającej te zmienne - linia 14.
+Kolejnym krokiem jest wypełnienie przygotowanych kolekcji danymi; realizowane jest to w liniach 17 i 18. 
+W przeciwieństwie do zmiennej typu skalar, kod nie operuje na typie monitorowanym `Monitored::Collection`. 
+Danymi wypełniane są pierwotnie zadeklarowane kolekcje `std::vector<float>` i to ich zawartość zostanie użyta do wypełnienia histogramu.
+
+We wszystkich powyższych przykładach, wartości zmiennych monitorowanych zostaną wpisane do histogramów, w momencie wywołania destruktora obiektu `Monitored::Group`.
 
 \begin{figure}[!ht]
 \centering
@@ -39,7 +60,9 @@ Histogram TH2F dla dwóch zmiennych monitorowanych typu 'Collection', utworzony 
 \label{fig:athena:histogram_TH2}
 \end{figure}
 
-\begin{python}[caption={Fragment kodu konfiguracji Athena Python~\cite{histogram-declaration}, zawierającego deklarację histogramów przedstawionych na \figref{fig:athena:histogram_TH1}, \figref{fig:athena:histogram_TH1_time} i \figref{fig:athena:histogram_TH2}}, label={lst:athena:histogram_declaration}]
+\FloatBarrier
+
+\begin{python}[caption={Fragment kodu konfiguracji Athena Python~\cite{histogram-declaration}, zawierającego deklarację histogramów przedstawionych na rysunkach~\ref{fig:athena:histogram_TH1},~\ref{fig:athena:histogram_TH1_time}~i~\ref{fig:athena:histogram_TH2}}, label={lst:athena:histogram_declaration}]
 class TrigL2MuonSAMonitoring(GenericMonitoringTool):
     def __init__ (self, name = "TrigL2MuonSAMonitoring"):
         super(TrigL2MuonSAMonitoring, self).__init__( name )
@@ -53,15 +76,15 @@ class TrigL2MuonSAMonitoring(GenericMonitoringTool):
         self.defineHistogram('TIME_Calibration_Streamer', type='TH1F', path='EXPERT', title="Calibration streamer time (us)", xbins=100, xmin=0, xmax=50000 )
 \end{python}
 
-\begin{cpp}[caption={Fragment kodu algorytmu~\cite{histogram-fill}, odpowiadającego za wypełnienie histogramu przedstawionego na \figref{fig:athena:histogram_TH1}, za pomocą zmiennej monitorowanej `TrackPt`.}, label={lst:athena:track_pt}]
+\begin{cpp}[caption={Fragment kodu algorytmu~\cite{histogram-fill}, odpowiadającego za wypełnienie histogramu przedstawionego na rysunku~\ref{fig:athena:histogram_TH1}, za pomocą zmiennej monitorowanej `TrackPt`.}, label={lst:athena:track_pt}]
 StatusCode MuFastSteering::updateMonitor(const LVL1::RecMuonRoI* roi,
   const TrigL2MuonSA::MdtHits& mdtHits,
-  std::vector<TrigL2MuonSA::TrackPattern>& trackPatterns )
+  std::vector<TrigL2MuonSA::TrackPattern>& trackPatterns)
 {
 (*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
   auto track_pt 	= Monitored::Scalar("TrackPt", 9999.);
 (*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
-  auto monitorIt	= Monitored::Group(m_monTool, inner_mdt_hits, middle_mdt_hits, outer_mdt_hits, invalid_rpc_roi_number, efficiency, sag_inverse, address, absolute_pt, sagitta, track_pt, track_eta, track_phi, failed_eta, failed_phi, res_inner, res_middle, res_outer, fit_residuals );
+  auto monitorIt	= Monitored::Group(m_monTool, inner_mdt_hits, middle_mdt_hits, outer_mdt_hits, invalid_rpc_roi_number, efficiency, sag_inverse, address, absolute_pt, sagitta, track_pt, track_eta, track_phi, failed_eta, failed_phi, res_inner, res_middle, res_outer, fit_residuals);
 (*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
   track_pt = (fabs(pattern.pt ) > ZERO_LIMIT) ? pattern.charge*pattern.pt : 9999.;
   absolute_pt = fabs(track_pt);
@@ -69,19 +92,19 @@ StatusCode MuFastSteering::updateMonitor(const LVL1::RecMuonRoI* roi,
 }
 \end{cpp}
 
-\begin{cpp}[caption={Fragment kodu algorytmu~\cite{histogram-fill}, odpowiadającego za wypełnienie histogramu przedstawionego na \figref{fig:athena:histogram_TH1_time}, za pomocą zmiennej monitorowanej `TIME\_Calibration\_Streamer`.}, label={lst:athena:time_calibration_streamer}]
+\begin{cpp}[caption={Fragment kodu algorytmu~\cite{histogram-fill}, odpowiadającego za wypełnienie histogramu przedstawionego na rysunku~\ref{fig:athena:histogram_TH1_time}, za pomocą zmiennej monitorowanej `TIME\_Calibration\_Streamer`.}, label={lst:athena:time_calibration_streamer}]
 StatusCode MuFastSteering::findMuonSignature(
   const DataVector<const TrigRoiDescriptor>& roids,
   const DataVector<const LVL1::RecMuonRoI>& muonRoIs,
   DataVector<xAOD::L2StandAloneMuon>& outputTracks,
   TrigRoiDescriptorCollection& outputID,
   TrigRoiDescriptorCollection& outputMS,
-  DataVector<xAOD::TrigComposite>& outputComposite )
+  DataVector<xAOD::TrigComposite>& outputComposite)
 {
 (*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
   auto calibrationTimer = Monitored::Timer("TIME_Calibration_Streamer");
 
-  auto monitorIt	= Monitored::Group(m_monTool, prepTimer, patternTimer, stationFitterTimer, trackFitterTimer, trackExtraTimer, calibrationTimer );
+  auto monitorIt	= Monitored::Group(m_monTool, prepTimer, patternTimer, stationFitterTimer, trackFitterTimer, trackExtraTimer, calibrationTimer);
 (*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
   calibrationTimer.start();
 (*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
@@ -92,7 +115,7 @@ StatusCode MuFastSteering::findMuonSignature(
 }
 \end{cpp}
 
-\begin{cpp}[caption={Fragment kodu algorytmu~\cite{histogram-fill}, odpowiadającego za wypełnienie histogramu przedstawionego na \figref{fig:athena:histogram_TH2}, za pomocą monitorowanych kolekcji `TrackEta` oraz `TrackPhi`.}, label={lst:athena:track_eta_vs_track_phi}]
+\begin{cpp}[caption={Fragment kodu algorytmu~\cite{histogram-fill}, odpowiadającego za wypełnienie histogramu przedstawionego na rysunku~\ref{fig:athena:histogram_TH2}, za pomocą monitorowanych kolekcji `TrackEta` oraz `TrackPhi`.}, label={lst:athena:track_eta_vs_track_phi}]
 StatusCode MuFastSteering::updateMonitor(const LVL1::RecMuonRoI* roi,
   const TrigL2MuonSA::MdtHits& mdtHits,
   std::vector<TrigL2MuonSA::TrackPattern>& trackPatterns)
@@ -117,12 +140,19 @@ StatusCode MuFastSteering::updateMonitor(const LVL1::RecMuonRoI* roi,
 \end{cpp}
 
 \subsection{Zastosowanie do monitorowania offline - Data Quality}
-Obecnie toczą się prace nad dodawaniem nowych funkcjonalności do kodu GenericMonitoringTool na potrzeby monitoringu offline~\cite{atlas-multithread-article}.
-Mają one na celu pokrycie bardziej skompilowanych przypadków użycia tego narzędzia, gdzie czas wykonania nie jest tak bardzo istotny. 
-Dzięki którym możliwe będzie szersze wykorzystanie tego narzędzia i dotarcie do większej liczby użytkowników. 
+GenericMonitoringTool jest obecnie głównym narzędziem wykorzystywanym do monitorowania jakości danych (Data Quality) offline~\cite{atlas-multithread-article}.
+Ze względu na nieco inne zastosowanie, użyte są dodatkowe klasy algorytmów DQ, a odwołania do narzędzia GMT są nieco bardziej ukryte.
+Obecnie, dodawane są także nowe funkcjonalności pozwalające na pokrycie większej ilości przypadków użycia.
 
-//TODO Odpowiedź od Petera Onyisi 
+\comment{
+Listing X pokazuje użycie GMT do monitorowania brakujących energii (neutrin lub innych nieoddziaływujących cząstek) a przez to monitorowanie jakości danych zbieranych przez linie trygera wyszukującą takie właśnie przypadki. W liniach …
 
+Listing Y pokazuje konfigurację histogramów monitorujących. W systemie offline DQ są one wstępnie kategoryzowane jako histogramy do automatycznego sprawdzenia (Shifter) i takie, które są przeznaczone dla ekspertów (Expert).
+
+Za każdą grupą, w praktce kryje się instancja GMT która jest konfigurowana tak aby wypełniać odpowiednie histogramy, najczęściej będące podzbiorem wszystkich możliwych do wytworzenia. 
+
+Diagram Z pokazuje zależności między klasami w środowisku DQ.
+}
 \subsection{Możliwe kierunki rozwoju}
 W przyszłości planowana jest aktualizacja wersji frameworka ROOT, używanego w obrębie platformy Athena.
 Jego najnowsze wydania, wewnętrznie zapewniają bezpieczeństwo dla przetwarzania wielowątkowego i wieloprocesowego.
