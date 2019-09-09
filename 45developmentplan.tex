@@ -62,7 +62,7 @@ Histogram TH2F dla dwóch zmiennych monitorowanych typu 'Collection', utworzony 
 
 \FloatBarrier
 
-\begin{python}[caption={Fragment kodu konfiguracji Athena Python~\cite{histogram-declaration}, zawierającego deklarację histogramów przedstawionych na rysunkach~\ref{fig:athena:histogram_TH1},~\ref{fig:athena:histogram_TH1_time}~i~\ref{fig:athena:histogram_TH2}}, label={lst:athena:histogram_declaration}]
+\begin{python}[caption={Fragment kodu konfiguracji Athena Python~\cite{histogram-declaration}, zawierającego deklarację histogramów przedstawionych na rysunkach~\ref{fig:athena:histogram_TH1},~\ref{fig:athena:histogram_TH1_time}~i~\ref{fig:athena:histogram_TH2}.}, label={lst:athena:histogram_declaration}]
 class TrigL2MuonSAMonitoring(GenericMonitoringTool):
     def __init__ (self, name = "TrigL2MuonSAMonitoring"):
         super(TrigL2MuonSAMonitoring, self).__init__( name )
@@ -142,17 +142,87 @@ StatusCode MuFastSteering::updateMonitor(const LVL1::RecMuonRoI* roi,
 \subsection{Zastosowanie do monitorowania offline - Data Quality}
 GenericMonitoringTool jest obecnie głównym narzędziem wykorzystywanym do monitorowania jakości danych (Data Quality) offline~\cite{atlas-multithread-article}.
 Ze względu na nieco inne zastosowanie, użyte są dodatkowe klasy algorytmów DQ, a odwołania do narzędzia GMT są nieco bardziej ukryte.
+Rysunek~\ref{fig:athena:offlineDiagram} pokazuje zależności między klasami w środowisku DQ.
 Obecnie, dodawane są także nowe funkcjonalności pozwalające na pokrycie większej ilości przypadków użycia.
 
-\comment{
-Listing X pokazuje użycie GMT do monitorowania brakujących energii (neutrin lub innych nieoddziaływujących cząstek) a przez to monitorowanie jakości danych zbieranych przez linie trygera wyszukującą takie właśnie przypadki. W liniach …
-
-Listing Y pokazuje konfigurację histogramów monitorujących. W systemie offline DQ są one wstępnie kategoryzowane jako histogramy do automatycznego sprawdzenia (Shifter) i takie, które są przeznaczone dla ekspertów (Expert).
-
-Za każdą grupą, w praktce kryje się instancja GMT która jest konfigurowana tak aby wypełniać odpowiednie histogramy, najczęściej będące podzbiorem wszystkich możliwych do wytworzenia. 
-
-Diagram Z pokazuje zależności między klasami w środowisku DQ.
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.75\textwidth]{img/offline_diagram.png}
+\caption{
+Zależności pomiędzy klasami w środowisku DQ offline.
 }
+\label{fig:athena:offlineDiagram}
+\end{figure}
+
+Listing~\ref{lst:athena:dq_histogram_declaration} pokazuje konfigurację GMT dla histogramów monitorujących brakujące energie, np. neutrin lub innych nie oddziaływujących cząstek.
+Pozwala to na monitorowanie jakości danych zbieranych przez linie trygera, wyszukującą takie właśnie przypadki.
+W systemie offline DQ histogramy są wstępnie kategoryzowane jako te do automatycznego sprawdzenia (Shifter), lub przeznaczone dla ekspertów (Expert).
+Dla każdej z tych grup są one definiowane niezależnie. 
+
+Listing~\ref{lst:athena:dq_histogram_fill} prezentuje proces wypełnienia histogramów DQ danymi.
+Podobnie jak w przypadku histogramów online, używane są tu zmienne monitorowane typu skalar - linie 1-9. 
+Taki sam jest również proces przypisywania do nich wartości - linie 11-23.
+Różni się natomiast sposób dostępu do grup monitorowanych - linie 25-28.
+Wykorzystywane są tu metody pomocnicze `fill()` oraz `getGroup()`, zdefiniowane w klasie `AthMonitorAlgorithm`.
+Ich wewnętrzna implementacja wykorzystuje grupy monitorowane.
+Są one więc interfejsem ukrywającym przed użytkownikiem instancje GMT, odpowiednio skonfigurowane, tak aby wypełniać właściwe histogramy - najczęściej będące podzbiorem wszystkich możliwych do wytworzenia. 
+
+\begin{python}[caption={Fragment kodu konfiguracji Athena Python~\cite{offline-declaration}, zawierającego deklarację histogramów na potrzeby monitoringu DQ offline.}, label={lst:athena:dq_histogram_declaration}]
+expertGroup = helper.addGroup(expertTrigMETMonAlg,'TrigMETMonitor','HLT/METMon/Expert/')
+(*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
+shifterGroup = helper.addGroup(shifterTrigMETMonAlg,'TrigMETMonitor','HLT/METMon/Shifter/')
+(*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
+shifterGroup.defineHistogram('L1_Ex',title='L1 Missing E_{x};E_{x} (GeV);Events',
+                            path='L1',xbins=199,xmin=-298.5,xmax=298.5)
+shifterGroup.defineHistogram('L1_Ey',title='L1 Missing E_{y};E_{y} (GeV);Events',
+                            path='L1',xbins=199,xmin=-298.5,xmax=298.5)
+shifterGroup.defineHistogram('L1_Et',title='L1 Missing E_{T};E_{T} (GeV);Events',
+                            path='L1',xbins=205,xmin=-13.5,xmax=401.5)
+shifterGroup.defineHistogram('cell_Ex',title='cell Missing E_{x};E_{x} (GeV);Events',
+                            path='cell',xbins=199,xmin=-298.5,xmax=298.5)
+shifterGroup.defineHistogram('cell_Ey',title='cell Missing E_{y};E_{y} (GeV);Events',
+                            path='cell',xbins=199,xmin=-298.5,xmax=298.5)
+shifterGroup.defineHistogram('cell_Et',title='cell Missing E_{T};E_{T} (GeV);Events',
+                            path='cell',xbins=205,xmin=-13.5,xmax=401.5)
+expertGroup.defineHistogram('mht_Ex',title='mht Missing E_{x};E_{x} (GeV);Events',
+                         path='mht',xbins=199,xmin=-298.5,xmax=298.5)
+expertGroup.defineHistogram('mht_Ey',title='mht Missing E_{y};E_{y} (GeV);Events',
+                         path='mht',xbins=199,xmin=-298.5,xmax=298.5)
+expertGroup.defineHistogram('mht_Et', title='mht E_{T};E_{T} (GeV);Events',
+                            path='mht',xbins=205,xmin=-13.5,xmax=401.5)
+\end{python}
+
+\begin{cpp}[caption={Fragment kodu algorytmu~\cite{offline-fill}, odpowiadającego za wypełnienie histogramów DQ offline}, label={lst:athena:dq_histogram_fill}]
+auto L1_Ex = Monitored::Scalar<float>("L1_Ex",0.0);
+auto L1_Ey = Monitored::Scalar<float>("L1_Ey",0.0);
+auto L1_Et = Monitored::Scalar<float>("L1_Et",0.0);
+auto cell_Ex = Monitored::Scalar<float>("cell_Ex",0.0);
+auto cell_Ey = Monitored::Scalar<float>("cell_Ey",0.0);
+auto cell_Et = Monitored::Scalar<float>("cell_Et",0.0);
+auto mht_Ex = Monitored::Scalar<float>("mht_Ex",0.0);
+auto mht_Ey = Monitored::Scalar<float>("mht_Ey",0.0);
+auto mht_Et = Monitored::Scalar<float>("mht_Et",0.0);
+(*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
+if (! hlt_cell_met_cont.isValid() ) {
+    hlt_met = hlt_cell_met_cont->at(0);
+    cell_Ex = (hlt_met->ex())/1000.;
+    cell_Ey = (hlt_met->ey())/1000.;
+    cell_Et = sqrt(cell_Ex*cell_Ex + cell_Ey*cell_Ey);
+}
+(*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
+if (! hlt_mht_met_cont.isValid() ) {
+    hlt_met = hlt_mht_met_cont->at(0);
+    mht_Ex = (hlt_met->ex())/1000.;
+    mht_Ey = (hlt_met->ey())/1000.;
+    mht_Et = sqrt(mht_Ex*mht_Ex + mht_Ey*mht_Ey);
+}
+(*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
+fill("TrigMETMonitor",L1_Ex,L1_Ey,L1_Et,cell_Ex,cell_Ey,cell_Et);
+(*@\centerline{\raisebox{-1pt}[0pt][0pt]{$\vdots$}}@*)
+auto tool = getGroup("TrigMETMonitor");
+fill(tool,mht_Ex,mht_Ey,mht_Et);
+\end{cpp}
+
 \subsection{Możliwe kierunki rozwoju}
 W przyszłości planowana jest aktualizacja wersji frameworka ROOT, używanego w obrębie platformy Athena.
 Jego najnowsze wydania, wewnętrznie zapewniają bezpieczeństwo dla przetwarzania wielowątkowego i wieloprocesowego.
